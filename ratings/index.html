@@ -109,6 +109,9 @@
   .ratio{display:flex;flex-direction:column;justify-content:flex-end;gap:6px;font-size:14px;color:var(--ink-2);padding-bottom:12px}
   .ratio b{font-size:20px;font-weight:600;color:var(--ink);letter-spacing:-0.01em}
   @media (max-width:520px){.recipe-grid{grid-template-columns:1fr 1fr}.recipe-grid .ratio{grid-column:1/-1;flex-direction:row;justify-content:flex-start;align-items:baseline;gap:8px;padding:0}}
+  .who .chip{height:48px;padding:0 18px;font-size:16px}
+  .who .chip small{font-size:13px;color:var(--ink-3)}
+  #other[hidden]{display:none}
   .group + .group{margin-top:18px}
   .group h3{font-size:13px;font-weight:500;color:var(--ink-2);margin:0 0 8px}
   .from-roaster{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2);margin:-6px 0 16px}
@@ -199,10 +202,13 @@
 
     <section>
       <h2>Who's tasting<span class="req">Required</span></h2>
-      <p class="hint">Saved on this phone, so you only type it once.</p>
+      <p class="hint">Saved on this phone, so you only pick once.</p>
       <div class="stack">
-        <label class="field">Your name<input type="text" id="by" autocomplete="given-name" placeholder="First name"></label>
-        <div class="seg" id="city" role="group" aria-label="Your city"></div>
+        <div class="chips who" id="who" role="group" aria-label="Who's tasting"></div>
+        <div class="stack" id="other" hidden>
+          <label class="field">Your name<input type="text" id="by" autocomplete="given-name" placeholder="First name"></label>
+          <div class="seg" id="city" role="group" aria-label="Your city"></div>
+        </div>
         <label class="field" id="code-field" hidden>Group code<input type="text" id="code" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="From the group chat"><span class="code-msg" id="code-msg"></span></label>
       </div>
     </section>
@@ -307,14 +313,18 @@ const PROFILE = [
 const METHODS = ['Espresso','Milk drink','Pour-over','AeroPress','French press','Moka pot','Drip machine','Cold brew'];
 const AGAIN = [['yes','Yes'],['maybe','Maybe'],['no','No']];
 
-let coffees = [], coffee = null;
+let coffees = [], coffee = null, people = [];
+const CITY_NAMES = {cincinnati:'Cincinnati', nyc:'New York', london:'London', barcelona:'Barcelona'};
+const PEOPLE_FALLBACK = [{name:'Sergio', city:'barcelona'},{name:'Francisco', city:'nyc'},{name:'Ben', city:'cincinnati'},{name:'Miguel', city:'london'}];
 let r = blank();
 function blank(){ const me = store.get('me') || {}; return {by: me.by || '', city: me.city || '', score: null, verdict: '', tasting: [], profile: {}, method: [], brew: {}, recipe: '', again: '', notes: ''}; }
 
 /* ---------- data ---------- */
 async function load(){
-  if (window.CX_DATA) { coffees = window.CX_DATA.coffees; return; }
-  try { coffees = (await (await fetch('../data/coffees.json', {cache:'no-cache'})).json()).coffees || []; } catch(e){ coffees = []; }
+  if (window.CX_DATA) { coffees = window.CX_DATA.coffees; people = window.CX_DATA.people || PEOPLE_FALLBACK; return; }
+  const get = p => fetch(p, {cache:'no-cache'}).then(x => x.ok ? x.json() : null).catch(() => null);
+  const [c, p] = await Promise.all([get('../data/coffees.json'), get('../data/people.json')]);
+  coffees = c?.coffees || []; people = p?.people || PEOPLE_FALLBACK;
 }
 
 /* ---------- colour helpers: chip tint from the coffee colour ---------- */
@@ -346,6 +356,7 @@ function pickCoffee(number){
 }
 function renderAll(){
   $('by').value = r.by;
+  renderWho();
   renderSeg('city', CITIES.map(c => [c,c]), () => r.city, v => { r.city = v; remember(); });
   renderScale(); renderNotes(); renderProfile(); renderMethods();
   $('recipe').value = r.recipe;
@@ -434,6 +445,28 @@ function renderMethods(){
   }));
 }
 
+/* ---------- who's tasting: one tap on a name, or someone else ---------- */
+let otherOpen = false;
+function renderWho(){
+  const match = people.find(p => p.name.toLowerCase() === (r.by || '').trim().toLowerCase());
+  if (r.by && !match) otherOpen = true;
+  const box = $('who');
+  box.innerHTML = people.map(p => `<button type="button" class="chip" data-name="${esc(p.name)}" aria-pressed="${!otherOpen && !!match && match.name === p.name}">${TICK}${esc(p.name)} <small>${esc(CITY_NAMES[p.city] || '')}</small></button>`).join('') +
+    `<button type="button" class="chip" data-other aria-pressed="${otherOpen}">${TICK}Someone else</button>`;
+  $('other').hidden = !otherOpen;
+  box.querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => {
+    if (b.hasAttribute('data-other')){
+      otherOpen = true; if (match || people.some(p => p.name === r.by)) { r.by = ''; r.city = ''; }
+      renderWho(); $('by').value = r.by; renderSeg('city', CITIES.map(c => [c,c]), () => r.city, v => { r.city = v; remember(); }); $('by').focus();
+    } else {
+      const p = people.find(x => x.name === b.dataset.name);
+      otherOpen = false; r.by = p.name; r.city = CITY_NAMES[p.city] || ''; $('by').value = r.by;
+      renderWho();
+    }
+    remember(); changed();
+  }));
+}
+
 /* ---------- verdict + recipe details ---------- */
 const QUICK = ['Best so far','Would buy again','Great with milk','Interesting, not for every day','Not for me'];
 function renderQuick(){
@@ -498,10 +531,10 @@ function chatText(e){
     e.notes ? `\n${e.notes}` : ''].filter(Boolean).join('\n');
 }
 $('submit').addEventListener('click', () => {
-  const missing = [!r.by.trim() && 'your name', !r.score && 'a score'].filter(Boolean);
+  const missing = [!r.by.trim() && 'who you are', !r.score && 'a score'].filter(Boolean);
   if (missing.length){
     err.textContent = `Add ${missing.join(' and ')} to save.`; err.hidden = false;
-    (!r.by.trim() ? $('by') : $('scale').firstElementChild).focus();
+    (!r.by.trim() ? (otherOpen ? $('by') : $('who').firstElementChild) : $('scale').firstElementChild).focus();
     return;
   }
   const e = entry();

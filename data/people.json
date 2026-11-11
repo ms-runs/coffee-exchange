@@ -1,0 +1,8 @@
+{
+  "people": [
+    {"id": "sergio",    "name": "Sergio",    "city": "barcelona",  "bio": "", "link": {"label": "Cafecito, his coffee journal", "url": "https://cafecito.sergiodn.com/"}},
+    {"id": "francisco", "name": "Francisco", "city": "nyc",        "bio": "", "link": null},
+    {"id": "ben",       "name": "Ben",       "city": "cincinnati", "bio": "", "link": null},
+    {"id": "miguel",    "name": "Miguel",    "city": "london",     "bio": "", "link": {"label": "migsousa.com", "url": "https://migsousa.com/"}}
+  ]
+}

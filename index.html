@@ -63,7 +63,7 @@
   .intro{padding:40px 0 48px}
   h1{font-size:clamp(44px,6.4vw,84px);font-weight:600;letter-spacing:-0.045em;line-height:.92;margin:0 0 24px;max-width:12ch}
   .lede{font-size:18px;line-height:1.45;color:var(--ink-2);max-width:40ch;margin:0}
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);margin:40px 0 0;border-top:1px solid var(--ink)}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);max-width:520px;margin:40px 0 0;border-top:1px solid var(--ink)}
   .stats div{padding:12px 12px 0 0}
   .stats b{display:block;font-size:36px;font-weight:600;letter-spacing:-0.03em;line-height:1}
   .stats span{display:block;font-size:13px;color:var(--ink-2);margin-top:6px}
@@ -91,12 +91,6 @@
   .tile.next .nm{color:var(--ink-3);font-weight:500}
 
   /* Steps */
-  .how{margin-top:64px}
-  .steps{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink);counter-reset:s;display:grid;grid-template-columns:repeat(2,1fr);column-gap:32px}
-  .steps li{counter-increment:s;padding:14px 0 16px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:32px 1fr;gap:4px 8px}
-  .steps li::before{content:counter(s,decimal-leading-zero);font-size:14px;color:var(--ink-3);grid-row:span 2}
-  .steps b{font-size:16px;font-weight:500}
-  .steps span{font-size:14px;color:var(--ink-2);line-height:1.4}
 
   /* Coffee page */
   .back{display:inline-flex;align-items:center;gap:6px;font-size:15px;margin:32px 0 24px}
@@ -146,6 +140,7 @@
 
   footer{max-width:1240px;margin:0 auto;padding:24px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;font-size:13px;color:var(--ink-2)}
   footer a{color:var(--ink-2)}
+  .foot-r{display:flex;gap:20px}
 
   .view[hidden]{display:none}
   .fade{animation:fade .35s ease-out}
@@ -169,10 +164,8 @@
     .intro{padding-top:8px}
   }
   @media (max-width:560px){
-    .stats{grid-template-columns:repeat(2,1fr)}
-    .stats div:nth-child(n+3){margin-top:12px}
-    .steps{grid-template-columns:1fr}
-    .c-head{grid-template-columns:1fr}
+    .stats b{font-size:30px}
+      .c-head{grid-template-columns:1fr}
     .c-num{grid-row:auto}
     .c-body{grid-template-columns:1fr}
     .bag{max-width:200px}
@@ -194,6 +187,7 @@
       <a href="#globe" data-globe>Globe</a>
       <a href="ratings/">Rate a coffee</a>
       <a href="cards/">Card maker</a>
+      <a href="about/">About</a>
     </nav>
     <button type="button" class="theme" data-theme-toggle aria-label="Switch to dark mode"></button>
     <button type="button" class="burger" id="burger" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
@@ -208,22 +202,13 @@
     <section class="view" id="home">
       <div class="intro">
         <h1>Four cities, one bag at a time.</h1>
-        <p class="lede">Each round one of us picks a coffee and posts a bag to the others in Cincinnati, New York, London and Barcelona. We taste it, rate it, and keep the record here.</p>
+        <p class="lede">Sergio, Francisco, Ben and Miguel take turns picking a coffee and posting a bag to the other three. We taste it, rate it and keep the record here. <a href="about/">About us</a></p>
         <div class="stats" id="stats"></div>
       </div>
 
       <div class="head"><h2>The record</h2><small id="record-sub"></small></div>
       <div class="grid" id="grid" role="list"></div>
 
-      <div class="how">
-        <div class="head"><h2>How a round works</h2></div>
-        <ol class="steps">
-          <li><b>Someone picks</b><span>One or two coffees, from a roaster they rate.</span></li>
-          <li><b>Bags go out</b><span>A small bag to each city, with a numbered card.</span></li>
-          <li><b>Everyone tastes</b><span>Score it, note the brew and what stood out.</span></li>
-          <li><b>We compare</b><span>On a call or in voice notes, then the next person picks.</span></li>
-        </ol>
-      </div>
     </section>
 
     <!-- Coffee page -->
@@ -237,7 +222,7 @@
 
 <footer>
   <span>Coffee exchange · Cincinnati, New York, London, Barcelona</span>
-  <a href="https://github.com/ms-runs/coffee-exchange">Source</a>
+  <span class="foot-r"><a href="about/">About</a><a href="https://github.com/ms-runs/coffee-exchange">Source</a></span>
 </footer>
 
 <script>
@@ -282,7 +267,6 @@ function renderHome(){
   $('stats').innerHTML = [
     [coffees.length, coffees.length === 1 ? 'coffee' : 'coffees'],
     [origins.size, origins.size === 1 ? 'origin country' : 'origin countries'],
-    [cities, 'cities'],
     [reviews.length, reviews.length === 1 ? 'rating' : 'ratings']
   ].map(([n,l]) => `<div><b>${n}</b><span>${l}</span></div>`).join('');
   $('record-sub').textContent = reviews.length ? `Rated out of ${scale}` : 'Ratings open soon';

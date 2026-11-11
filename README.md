@@ -12,8 +12,9 @@ Live: https://ms-runs.github.io/coffee-exchange/ (embedded on migsousa.com with 
 | [`cards/`](cards/) | A6 card maker, Swiss grid, jsPDF export | First version |
 | [`worker/`](worker/) | Cloudflare Worker: roaster link → coffee fields | Next |
 | [`ratings/`](ratings/) | Ratings grid and review forms | Planned |
+| [`about/`](about/) | Who we are and how a round works; people come from `data/people.json` | First version |
 | [`index.html`](index.html) | The site: the record of every coffee by number, a page per coffee with ratings, and the globe beside it (they talk via `postMessage`) | Draft |
-| [`data/`](data/) | `coffees.json`, `cities.json`, `reviews.json` (empty until ratings open), one JSON file per round in `rounds/` | Started |
+| [`data/`](data/) | `coffees.json`, `cities.json`, `people.json`, `reviews.json` (empty until ratings open), one JSON file per round in `rounds/` | Started |
 | [`assets/`](assets/) | Bag photos and shared images | Empty |
 | [`docs/`](docs/) | Project brief and card design spec | |
 | [`tools/`](tools/) | Build scripts (land dots for the globe) | |

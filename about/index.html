@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script src="../assets/theme.js"></script>
+<script src="../assets/config.js"></script>
+<title>About · Coffee exchange</title>
+<style>
+  :root{
+    --blue:#0000FF; --blue-press:#0000C8; --ink:#14171F; --ink-2:#4E5566; --ink-3:#6B7282;
+    --rule:#C9CED8; --line:#E3E6EC; --wash:#F4F5F8;
+    --font:"Helvetica Neue",Helvetica,"TeX Gyre Heros",Arial,sans-serif;
+    --bg:#FFFFFF; --on-blue:#FFFFFF;
+  }
+  :root[data-theme=dark]{
+    --bg:#141B2A; --ink:#FFFFFF; --ink-2:#B7BFCF; --ink-3:#8C95A8;
+    --rule:#3A4560; --line:#262F45; --wash:#1D2538;
+    --blue:#93A3FF; --blue-press:#B3BEFF; --on-blue:#141B2A;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline;text-underline-offset:3px}
+  :focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+
+  /* Top bar (same as the record) */
+  .bar{position:relative;max-width:1240px;margin:0 auto;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+  .mark{white-space:nowrap;font-size:17px;font-weight:600;letter-spacing:-0.01em;color:var(--ink)}
+  .mark:hover{text-decoration:none}
+  .bar-r{display:flex;align-items:center;gap:16px}
+  .site-nav{display:flex;align-items:center;gap:24px;font-size:15px;white-space:nowrap}
+  .site-nav a{color:var(--ink-2)}
+  .site-nav a:hover{color:var(--ink);text-decoration:none}
+  .site-nav a[aria-current=page]{color:var(--ink)}
+  .theme,.burger{all:unset;box-sizing:border-box;cursor:pointer;width:40px;height:40px;display:grid;place-items:center;border-radius:8px;color:var(--ink-2);transition:background-color .15s ease-out,color .15s ease-out}
+  .theme{margin:-8px -6px}
+  .theme:hover,.burger:hover{background:var(--wash);color:var(--ink)}
+  .theme:focus-visible,.burger:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+  .burger{display:none;margin-right:-10px;color:var(--ink)}
+  .burger path{transition:transform .2s ease-out,opacity .2s ease-out;transform-origin:10px 10px}
+  .burger[aria-expanded=true] .b1{transform:translateY(4px) rotate(45deg)}
+  .burger[aria-expanded=true] .b2{opacity:0}
+  .burger[aria-expanded=true] .b3{transform:translateY(-4px) rotate(-45deg)}
+
+  main{max-width:1240px;margin:0 auto;padding:0 24px 80px}
+
+  /* Intro */
+  .intro{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:56px;align-items:end;padding:40px 0 56px;border-bottom:1px solid var(--ink)}
+  h1{font-size:clamp(44px,6.4vw,84px);font-weight:600;letter-spacing:-0.045em;line-height:.92;margin:0;max-width:11ch}
+  .intro p{font-size:18px;line-height:1.5;color:var(--ink-2);margin:0 0 14px;max-width:44ch}
+  .intro p:last-child{margin-bottom:0}
+  .intro p b{color:var(--ink);font-weight:500}
+
+  section{padding:56px 0 0}
+  .head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin:0 0 16px}
+  h2{font-size:24px;font-weight:600;letter-spacing:-0.02em;margin:0}
+  .head small{font-size:14px;color:var(--ink-2)}
+
+  /* People: four columns on a hairline grid */
+  .people{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);margin:0 -16px}
+  .person{background:var(--bg);padding:20px 16px 22px;display:flex;flex-direction:column;min-height:300px}
+  .mono{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-size:26px;font-weight:600;letter-spacing:-0.02em;color:var(--ink);background:var(--wash);box-shadow:inset 0 0 0 1px var(--line);margin-bottom:20px}
+  .person h3{font-size:28px;font-weight:600;letter-spacing:-0.025em;margin:0}
+  .where{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:15px;color:var(--ink-2);margin-top:4px}
+  .where time{font-size:14px;color:var(--ink-3)}
+  .bio{font-size:15px;line-height:1.45;margin:14px 0 0}
+  .facts{margin:auto 0 0;padding-top:20px;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:14px}
+  .facts dt{color:var(--ink-2)}
+  .facts dd{margin:0;font-weight:500;text-align:right}
+  .facts dd .num{font-weight:600}
+  .person .ext{font-size:14px;margin-top:12px;display:inline-flex;align-items:center;gap:6px}
+  .person .ext svg{width:14px;height:14px}
+
+  /* Steps */
+  .steps{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink);counter-reset:s;display:grid;grid-template-columns:repeat(4,1fr);column-gap:32px}
+  .steps li{counter-increment:s;padding:16px 0 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+  .steps li::before{content:counter(s,decimal-leading-zero);font-size:40px;font-weight:600;letter-spacing:-0.04em;line-height:1;color:var(--blue);margin-bottom:10px}
+  .steps b{font-size:17px;font-weight:500}
+  .steps span{font-size:15px;color:var(--ink-2);line-height:1.45}
+
+  /* Tools */
+  .tools{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
+  .tools li{border-bottom:1px solid var(--line)}
+  .tools a{display:grid;grid-template-columns:200px 1fr auto;gap:16px;align-items:baseline;padding:16px 0;color:var(--ink)}
+  .tools a:hover{text-decoration:none}
+  .tools a:hover b{color:var(--blue)}
+  .tools b{font-size:18px;font-weight:500;transition:color .15s ease-out}
+  .tools span{font-size:15px;color:var(--ink-2)}
+  .tools svg{width:16px;height:16px;color:var(--ink-3)}
+
+  footer{max-width:1240px;margin:0 auto;padding:24px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;font-size:13px;color:var(--ink-2)}
+  footer a{color:var(--ink-2)}
+  .foot-r{display:flex;gap:20px}
+
+  @media (max-width:980px){
+    .intro{grid-template-columns:1fr;gap:24px;padding-top:16px}
+    .people{grid-template-columns:repeat(2,1fr)}
+    .steps{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:760px){
+    .burger{display:grid}
+    .bar{padding:12px 24px}
+    .site-nav{position:absolute;top:100%;left:0;right:0;z-index:20;flex-direction:column;align-items:stretch;gap:2px;padding:4px 12px 16px;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:0 12px 24px rgba(20,23,31,.08);font-size:20px;
+      opacity:0;transform:translateY(-6px);pointer-events:none;visibility:hidden;transition:opacity .2s ease-out,transform .2s ease-out,visibility 0s linear .2s}
+    .site-nav.open{opacity:1;transform:none;pointer-events:auto;visibility:visible;transition:opacity .2s ease-out,transform .2s ease-out}
+    .site-nav a{padding:13px 12px;border-radius:10px;color:var(--ink);transition:background-color .15s ease-out}
+    .site-nav a:hover,.site-nav a:active{background:var(--wash);text-decoration:none}
+    .site-nav a[aria-current=page]{color:var(--blue);background:var(--wash)}
+    .site-nav a:focus{outline:none}
+    .site-nav a:focus-visible{box-shadow:inset 0 0 0 1.5px var(--rule)}
+    .mark{font-size:15px}
+    .tools a{grid-template-columns:1fr auto;gap:4px 12px}
+    .tools span{grid-column:1;grid-row:2}
+    .tools svg{grid-row:1/3;align-self:center}
+  }
+  @media (max-width:560px){
+    .people{grid-template-columns:1fr}
+    .head small{display:none}
+    .person{min-height:0;display:grid;grid-template-columns:56px 1fr;column-gap:16px}
+    .mono{width:56px;height:56px;font-size:22px;margin:0;grid-row:span 2}
+    .person h3{font-size:24px;align-self:end}
+    .where{align-self:start}
+    .bio,.facts,.person .ext{grid-column:1/-1}
+    .facts{padding-top:16px}
+    .steps{grid-template-columns:1fr}
+    .steps li{display:grid;grid-template-columns:48px 1fr;column-gap:8px}
+    .steps li::before{grid-row:span 2;font-size:28px;margin:0}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="mark" href="../">Coffee exchange</a>
+  <div class="bar-r">
+    <nav class="site-nav" id="site-nav" aria-label="Site">
+      <a href="../">Record</a>
+      <a href="../#globe">Globe</a>
+      <a href="../ratings/">Rate a coffee</a>
+      <a href="../cards/">Card maker</a>
+      <a href="./" aria-current="page">About</a>
+    </nav>
+    <button type="button" class="theme" data-theme-toggle aria-label="Switch to dark mode"></button>
+    <button type="button" class="burger" id="burger" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+      <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path class="b1" d="M3 6h14"/><path class="b2" d="M3 10h14"/><path class="b3" d="M3 14h14"/></svg>
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="intro">
+    <h1>A coffee club that travels by post.</h1>
+    <div>
+      <p><b>Four friends, four cities.</b> Each round one of us picks a coffee from a roaster we rate and posts a small bag to the other three, with a numbered card that explains it.</p>
+      <p>We each brew it our own way, rate it here and compare notes on a call or in voice notes. Over time it builds into a record of every coffee we've shared and where it came from.</p>
+    </div>
+  </div>
+
+  <section aria-labelledby="people-h">
+    <div class="head"><h2 id="people-h">The four of us</h2><small id="people-sub"></small></div>
+    <div class="people" id="people"></div>
+  </section>
+
+  <section aria-labelledby="how-h">
+    <div class="head"><h2 id="how-h">How a round works</h2></div>
+    <ol class="steps">
+      <li><b>Someone picks</b><span>One or two coffees they love, from a roaster they rate. Turns rotate between the four of us.</span></li>
+      <li><b>Bags go out</b><span>A small bag to each city, with an A6 card: the coffee's number, origin, process and tasting notes.</span></li>
+      <li><b>Everyone tastes</b><span>Brew it however you like, then rate it: a score, what you tasted, how it felt and how you made it.</span></li>
+      <li><b>We compare</b><span>On a call or in voice notes. The coffee joins the record and lights up its origin on the globe.</span></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="tools-h">
+    <div class="head"><h2 id="tools-h">What's on the site</h2></div>
+    <ul class="tools">
+      <li><a href="../"><b>The record</b><span>Every coffee by number, with its details and everyone's ratings</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg></a></li>
+      <li><a href="../ratings/"><b>Rate a coffee</b><span>The review form, also opened from the QR code on each card</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg></a></li>
+      <li><a href="../#globe"><b>The globe</b><span>Where we are, and where the coffees we've tried were grown</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg></a></li>
+      <li><a href="../cards/"><b>Card maker</b><span>Makes the printed card that goes in each bag</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg></a></li>
+    </ul>
+  </section>
+</main>
+
+<footer>
+  <span>Coffee exchange · Cincinnati, New York, London, Barcelona</span>
+  <span class="foot-r"><a href="../">Record</a><a href="https://github.com/ms-runs/coffee-exchange">Source</a></span>
+</footer>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+const OUT = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h7v7M13 3L4 12"/></svg>';
+const tone = h => window.cxTheme ? cxTheme.tone(h) : h;
+
+const FALLBACK = {
+  people: [
+    {id:'sergio', name:'Sergio', city:'barcelona'}, {id:'francisco', name:'Francisco', city:'nyc'},
+    {id:'ben', name:'Ben', city:'cincinnati'}, {id:'miguel', name:'Miguel', city:'london'}
+  ],
+  cities: [
+    {id:'cincinnati', name:'Cincinnati', tz:'America/New_York'}, {id:'nyc', name:'New York', tz:'America/New_York'},
+    {id:'london', name:'London', tz:'Europe/London'}, {id:'barcelona', name:'Barcelona', tz:'Europe/Madrid'}
+  ]
+};
+let people = [], cities = [], coffees = [], reviews = [];
+
+async function load(){
+  const D = window.CX_DATA;
+  if (D){ ({people, cities, coffees} = D); reviews = D.reviews || []; return; }
+  const get = p => fetch(p, {cache:'no-cache'}).then(r => r.ok ? r.json() : null).catch(() => null);
+  const api = (window.CX_API || '').replace(/\/$/,'');
+  const [p, c, k, r] = await Promise.all([get('../data/people.json'), get('../data/cities.json'), get('../data/coffees.json'), api ? get(api + '/api/reviews') : get('../data/reviews.json')]);
+  people = p?.people || FALLBACK.people; cities = c?.cities || FALLBACK.cities; coffees = k?.coffees || []; reviews = r?.reviews || [];
+}
+
+const same = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+function render(){
+  $('people').innerHTML = people.map(p => {
+    const city = cities.find(c => c.id === p.city) || {};
+    const picks = coffees.filter(c => same(c.pickedBy, p.name));
+    const mine = reviews.filter(r => same(r.by, p.name));
+    const avg = mine.length ? (mine.reduce((a, r) => a + Number(r.score || 0), 0) / mine.length).toFixed(1).replace(/\.0$/,'') : null;
+    return `<article class="person">
+      <span class="mono" aria-hidden="true">${esc(p.name[0])}</span>
+      <h3>${esc(p.name)}</h3>
+      <p class="where"><span>${esc(city.name || '')}</span><time data-tz="${esc(city.tz || '')}"></time></p>
+      ${p.bio ? `<p class="bio">${esc(p.bio)}</p>` : ''}
+      ${p.link ? `<a class="ext" href="${esc(p.link.url)}" target="_blank" rel="noopener">${OUT}${esc(p.link.label)}</a>` : ''}
+      <dl class="facts">
+        <dt>Picked</dt><dd>${picks.length ? picks.map(c => `<span class="num" style="color:${esc(tone(c.colour))}">${esc(c.number)}</span> ${esc(c.name)}`).join(', ') : 'Not yet'}</dd>
+        <dt>Ratings</dt><dd>${mine.length ? `${mine.length} · avg ${avg}/10` : 'None yet'}</dd>
+      </dl>
+    </article>`;
+  }).join('');
+  $('people-sub').textContent = cities.map(c => c.name).join(', ');
+  clock();
+}
+function clock(){
+  document.querySelectorAll('time[data-tz]').forEach(t => {
+    if (!t.dataset.tz) return;
+    try { t.textContent = new Intl.DateTimeFormat('en-GB', {hour:'2-digit', minute:'2-digit', timeZone:t.dataset.tz}).format(new Date()); } catch(e){}
+  });
+}
+setInterval(clock, 15000);
+load().then(render);
+if (window.cxTheme) cxTheme.onChange(() => { if (people.length) render(); });
+
+/* burger menu */
+const burger = $('burger'), nav = $('site-nav');
+function menu(open, fromKeys){
+  nav.classList.toggle('open', open); burger.setAttribute('aria-expanded', open); burger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  if (open && fromKeys) nav.querySelector('a').focus({preventScroll:true});
+}
+burger.addEventListener('click', e => menu(!nav.classList.contains('open'), e.detail === 0));
+nav.addEventListener('click', e => { if (e.target.closest('a')) menu(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && nav.classList.contains('open')){ menu(false); burger.focus(); } });
+document.addEventListener('click', e => { if (nav.classList.contains('open') && !e.target.closest('.bar')) menu(false); });
+})();
+</script>
+</body>
+</html>
