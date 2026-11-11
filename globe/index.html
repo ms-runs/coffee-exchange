@@ -373,6 +373,21 @@ const GEO={"dots":[-691,-550,-665,-550,-730,-535,-718,-520,-693,-520,-753,-505,-
     indexCoffees(); renderList();
   }).catch(() => {});
 
+  // ---- talk to a parent page (the site): {cx:'globe', mode, coffee:'02', city:'london'} in, {cx:'globe-coffee', number} out ----
+  addEventListener('message', e => {
+    const d = e.data; if (!d || d.cx !== 'globe') return;
+    if (d.mode && d.mode !== mode) setMode(d.mode);
+    if (d.coffee != null){
+      if (mode !== 'coffees') setMode('coffees');
+      const ci = COFFEES.findIndex(c => c.number === String(d.coffee));
+      if (ci >= 0){ activeCoffee = null; goToCoffee(ci); }
+    }
+    if (d.city){ if (mode !== 'cities') setMode('cities'); goToCity(d.city); }
+  });
+  const tell = number => { if (parent !== window) try { parent.postMessage({cx:'globe-coffee', number}, '*'); } catch(e){} };
+  const _goToCoffee = goToCoffee;
+  goToCoffee = ci => { _goToCoffee(ci); if (activeCoffee === ci && COFFEES[ci]) tell(COFFEES[ci].number); };
+
   resize();
   setMode(location.hash==='#coffees' || q.get('mode')==='coffees' ? 'coffees' : 'cities', true);
   requestAnimationFrame(tick);
