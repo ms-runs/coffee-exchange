@@ -34,12 +34,20 @@
   .bar{max-width:1240px;margin:0 auto;padding:20px 24px;display:flex;justify-content:space-between;align-items:baseline;gap:16px}
   .mark{white-space:nowrap;font-size:17px;font-weight:600;letter-spacing:-0.01em;color:var(--ink)}
   .mark:hover{text-decoration:none}
-  nav{display:flex;gap:24px;font-size:15px;white-space:nowrap}
-  nav a{color:var(--ink-2)}
-  nav a:hover{color:var(--ink);text-decoration:none}
-  nav a[aria-current=page]{color:var(--ink)}
-  nav{align-items:center}
-  .theme{all:unset;box-sizing:border-box;cursor:pointer;width:36px;height:36px;margin:-8px -8px -8px 0;display:grid;place-items:center;border-radius:8px;color:var(--ink-2);transition:background-color .15s ease-out,color .15s ease-out}
+  .bar{position:relative}
+  .bar-r{display:flex;align-items:center;gap:16px}
+  .site-nav{display:flex;align-items:center;gap:24px;font-size:15px;white-space:nowrap}
+  .site-nav a{color:var(--ink-2)}
+  .site-nav a:hover{color:var(--ink);text-decoration:none}
+  .site-nav a[aria-current=page]{color:var(--ink)}
+  .burger{all:unset;box-sizing:border-box;cursor:pointer;width:40px;height:40px;margin-right:-10px;display:none;place-items:center;border-radius:8px;color:var(--ink)}
+  .burger:hover{background:var(--wash)}
+  .burger:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+  .burger path{transition:transform .2s ease-out,opacity .2s ease-out;transform-origin:10px 10px}
+  .burger[aria-expanded=true] .b1{transform:translateY(4px) rotate(45deg)}
+  .burger[aria-expanded=true] .b2{opacity:0}
+  .burger[aria-expanded=true] .b3{transform:translateY(-4px) rotate(-45deg)}
+  .theme{all:unset;box-sizing:border-box;cursor:pointer;width:40px;height:40px;margin:-8px -6px;display:grid;place-items:center;border-radius:8px;color:var(--ink-2);transition:background-color .15s ease-out,color .15s ease-out}
   .theme:hover{background:var(--wash);color:var(--ink)}
   .theme:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
   .bar{align-items:center}
@@ -47,7 +55,8 @@
   /* Two columns: the record scrolls, the globe stays */
   .layout{max-width:1240px;margin:0 auto;padding:0 24px 80px;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:56px;align-items:start}
   .globe-col{position:sticky;top:12px}
-  .globe{width:100%;aspect-ratio:4/5;border:0;display:block}
+  .globe{width:100%;aspect-ratio:4/5;border:0;display:block;overflow:hidden}
+  .globe.fitted{aspect-ratio:auto}
   .globe-note{font-size:13px;color:var(--ink-2);margin:4px 0 0;line-height:1.4}
 
   /* Intro */
@@ -141,6 +150,16 @@
   .fade{animation:fade .35s ease-out}
   @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
+  @media (max-width:760px){
+    .burger{display:grid}
+    .bar{padding:12px 24px}
+    .site-nav{position:absolute;top:100%;left:0;right:0;z-index:20;flex-direction:column;align-items:stretch;gap:0;padding:4px 24px 20px;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:0 12px 24px rgba(20,23,31,.08);font-size:20px;
+      opacity:0;transform:translateY(-6px);pointer-events:none;visibility:hidden;transition:opacity .2s ease-out,transform .2s ease-out,visibility 0s linear .2s}
+    .site-nav.open{opacity:1;transform:none;pointer-events:auto;visibility:visible;transition:opacity .2s ease-out,transform .2s ease-out}
+    .site-nav a{padding:14px 0;border-bottom:1px solid var(--line);color:var(--ink)}
+    .site-nav a:last-child{border-bottom:0}
+    .site-nav a[aria-current=page]{color:var(--blue)}
+  }
   @media (max-width:980px){
     .layout{grid-template-columns:1fr;gap:0}
     .globe-col{position:static;order:-1;max-width:480px;width:100%;margin:0 auto}
@@ -154,9 +173,8 @@
     .c-num{grid-row:auto}
     .c-body{grid-template-columns:1fr}
     .bag{max-width:200px}
-    nav{gap:14px;font-size:14px}
+    .burger{display:grid}
     .mark{font-size:15px}
-    .globe{aspect-ratio:2/3}
     .tile{min-height:0}
     .tile .n{font-size:72px}
     .tile .nm{margin-top:20px}
@@ -167,13 +185,18 @@
 <body>
 <header class="bar">
   <a class="mark" href="#" data-home>Coffee exchange</a>
-  <nav aria-label="Site">
-    <a href="#" data-home aria-current="page">Record</a>
-    <a href="#globe" data-globe>Globe</a>
-    <a href="ratings/">Rate</a>
-    <a href="cards/">Card maker</a>
+  <div class="bar-r">
+    <nav class="site-nav" id="site-nav" aria-label="Site">
+      <a href="#" data-home aria-current="page">Record</a>
+      <a href="#globe" data-globe>Globe</a>
+      <a href="ratings/">Rate a coffee</a>
+      <a href="cards/">Card maker</a>
+    </nav>
     <button type="button" class="theme" data-theme-toggle aria-label="Switch to dark mode"></button>
-  </nav>
+    <button type="button" class="burger" id="burger" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+      <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path class="b1" d="M3 6h14"/><path class="b2" d="M3 10h14"/><path class="b3" d="M3 14h14"/></svg>
+    </button>
+  </div>
 </header>
 
 <div class="layout">
@@ -205,7 +228,7 @@
   </main>
 
   <aside class="globe-col" id="globe" aria-label="Globe">
-    <iframe class="globe" id="globe-frame" src="globe/?caption=0" title="Globe showing our cities and where our coffees come from"></iframe>
+    <iframe class="globe" id="globe-frame" scrolling="no" src="globe/?caption=0" title="Globe showing our cities and where our coffees come from"></iframe>
   </aside>
 </div>
 
@@ -326,7 +349,7 @@ addEventListener('message', e => {
 function route(){
   const m = location.hash.match(/^#coffee-(\d+)$/), c = m && coffees.find(c => c.number === m[1]);
   $('home').hidden = !!c; $('coffee').hidden = !c;
-  document.querySelector('nav a[data-home]').setAttribute('aria-current', c ? 'false' : 'page');
+  document.querySelector('.site-nav a[data-home]').setAttribute('aria-current', c ? 'false' : 'page');
   const v = c ? $('coffee') : $('home');
   v.classList.remove('fade'); void v.offsetWidth; v.classList.add('fade');
   if (c){ renderCoffee(c); globe({coffee:c.number}); scrollTo({top:0}); }
@@ -339,6 +362,26 @@ document.addEventListener('click', e => {
   if (g){ e.preventDefault(); $('globe').scrollIntoView({behavior:'smooth', block:'start'}); globe({mode:'coffees'}); }
 });
 addEventListener('hashchange', route);
+
+/* ---------- burger menu (phones) ---------- */
+const burger = $('burger'), nav = $('site-nav');
+function menu(open){
+  nav.classList.toggle('open', open);
+  burger.setAttribute('aria-expanded', open);
+  burger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  if (open) nav.querySelector('a').focus({preventScroll:true});
+}
+burger.addEventListener('click', () => menu(!nav.classList.contains('open')));
+nav.addEventListener('click', e => { if (e.target.closest('a')) menu(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && nav.classList.contains('open')){ menu(false); burger.focus(); } });
+document.addEventListener('click', e => { if (nav.classList.contains('open') && !e.target.closest('.bar')) menu(false); });
+matchMedia('(min-width:761px)').addEventListener('change', e => { if (e.matches) menu(false); });
+
+/* ---------- globe frame fits its content (no inner scroll) ---------- */
+addEventListener('message', e => {
+  const d = e.data; if (!d || d.cx !== 'globe-size' || !(d.h > 0)) return;
+  const f = $('globe-frame'); f.classList.add('fitted'); f.style.height = d.h + 'px';
+});
 addEventListener('popstate', route);
 
 load().then(() => { renderHome(); route(); });

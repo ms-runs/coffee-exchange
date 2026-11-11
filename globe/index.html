@@ -44,7 +44,7 @@
   body.no-controls .cities, body.no-controls .seg, body.no-caption .cap b{display:none}
   body.no-caption .cap{justify-content:flex-end}
   body.no-caption.no-controls .cap{display:none}
-  @media (max-width:420px){.cities{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:420px){.wrap{padding:12px 12px 16px}.cities{grid-template-columns:repeat(4,1fr)}.cities button{padding:10px 4px 10px 0}.name{font-size:13px}.time{font-size:12px}}
 </style>
 </head>
 <body>
@@ -238,7 +238,9 @@ const GEO={"dots":[-691,-550,-665,-550,-730,-535,-718,-520,-693,-520,-753,-505,-
         ctx.restore();
         const fs = Math.max(12, Math.min(15, R/22));
         ctx.font = `500 ${fs}px ${FONT}`; ctx.textBaseline='middle'; ctx.textAlign = p.c.side>0 ? 'left' : 'right';
-        halo(p.c.name, px + p.c.side*(pr*s+6), py, INK);
+        const tw = ctx.measureText(p.c.name).width + 6; let lx = px + p.c.side*(pr*s+6);
+        lx = p.c.side > 0 ? Math.min(lx, W - tw) : Math.max(lx, tw);   // keep labels inside the frame
+        halo(p.c.name, lx, py, INK);
         ctx.globalAlpha=1;
         if (p.z>0.1 && mode==='cities') hits.push({kind:'city', id:p.c.id, x:px, y:py, r:pr*s+4});
       }
@@ -396,6 +398,13 @@ const GEO={"dots":[-691,-550,-665,-550,-730,-535,-718,-520,-693,-520,-753,-505,-
     }
     if (d.city){ if (mode !== 'cities') setMode('cities'); goToCity(d.city); }
   });
+  // tell a parent page how tall the content is, so the iframe can fit it with no inner scroll
+  if (parent !== window){
+    let lastH = 0;
+    const sendSize = () => { const h = Math.ceil(document.body.getBoundingClientRect().height); if (h && h !== lastH){ lastH = h; try { parent.postMessage({cx:'globe-size', h}, '*'); } catch(e){} } };
+    new ResizeObserver(sendSize).observe(document.body);
+    addEventListener('load', sendSize);
+  }
   const tell = number => { if (parent !== window) try { parent.postMessage({cx:'globe-coffee', number}, '*'); } catch(e){} };
   const _goToCoffee = goToCoffee;
   goToCoffee = ci => { _goToCoffee(ci); if (activeCoffee === ci && COFFEES[ci]) tell(COFFEES[ci].number); };
