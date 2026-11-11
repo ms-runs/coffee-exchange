@@ -9,8 +9,8 @@ Live: https://ms-runs.github.io/coffee-exchange/ (embedded on migsousa.com with 
 | Folder | What | Status |
 | --- | --- | --- |
 | [`globe/`](globe/) | Turning dot globe. **Our cities**: cup pins, swap-ring routes, local times. **Coffees we've tried**: origin countries lit in each coffee's number colour | First version |
-| [`cards/`](cards/) | A6 card maker, Swiss grid, jsPDF export | Next |
-| [`worker/`](worker/) | Cloudflare Worker: roaster link → coffee fields | Planned |
+| [`cards/`](cards/) | A6 card maker, Swiss grid, jsPDF export | First version |
+| [`worker/`](worker/) | Cloudflare Worker: roaster link → coffee fields | Next |
 | [`ratings/`](ratings/) | Ratings grid and review forms | Planned |
 | [`data/`](data/) | `coffees.json`, `cities.json`, one JSON file per round in `rounds/` | Started |
 | [`assets/`](assets/) | Bag photos and shared images | Empty |
