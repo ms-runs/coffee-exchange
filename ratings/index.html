@@ -90,6 +90,25 @@
   .own-input[hidden]{display:none}
   .own-input input{height:40px;font-size:15px}
 
+  .verdict{margin-top:20px}
+  .quick{margin-top:10px}
+  .quick .chip{height:34px;font-size:14px;padding:0 12px;color:var(--ink-2)}
+  details.more{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  details.more summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:14px 0;font-size:15px;font-weight:500}
+  details.more summary::-webkit-details-marker{display:none}
+  details.more summary span{font-weight:400;color:var(--ink-3);font-size:13px}
+  details.more summary svg{width:16px;height:16px;color:var(--ink-3);transition:transform .2s ease-out}
+  details.more[open] summary svg{transform:rotate(90deg)}
+  details.more summary:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+  .recipe-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px 12px;padding:4px 0 18px}
+  .recipe-grid .wide{grid-column:1/-1}
+  .recipe-grid label:nth-child(4),.recipe-grid label:nth-child(5){grid-column:span 1}
+  .unit{position:relative;display:block}
+  .unit input{padding-right:34px}
+  .unit i{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-style:normal;font-size:14px;color:var(--ink-3);pointer-events:none}
+  .ratio{display:flex;flex-direction:column;justify-content:flex-end;gap:6px;font-size:14px;color:var(--ink-2);padding-bottom:12px}
+  .ratio b{font-size:20px;font-weight:600;color:var(--ink);letter-spacing:-0.01em}
+  @media (max-width:520px){.recipe-grid{grid-template-columns:1fr 1fr}.recipe-grid .ratio{grid-column:1/-1;flex-direction:row;justify-content:flex-start;align-items:baseline;gap:8px;padding:0}}
   .group + .group{margin-top:18px}
   .group h3{font-size:13px;font-weight:500;color:var(--ink-2);margin:0 0 8px}
   .from-roaster{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2);margin:-6px 0 16px}
@@ -193,6 +212,10 @@
       <p class="hint">Out of 10, overall. Go with your gut.</p>
       <div class="score-top"><span class="score-big empty" id="score-big">–<small>/10</small></span><span class="score-word" id="score-word">Tap a number</span></div>
       <div class="scale" id="scale" role="radiogroup" aria-label="Score out of 10"></div>
+      <label class="field verdict">In a few words (optional)
+        <input type="text" id="verdict" maxlength="80" placeholder="e.g. Best so far, or great with milk">
+      </label>
+      <div class="chips quick" id="quick" aria-label="Quick verdicts"></div>
     </section>
 
     <section>
@@ -212,7 +235,19 @@
       <h2>How you brewed it</h2>
       <div class="stack">
         <div class="chips" id="method" role="group" aria-label="Brew method"></div>
-        <label class="field">Recipe (optional)<input type="text" id="recipe" placeholder="e.g. 18 g in, 36 g out, 28 s"></label>
+        <details class="more" id="more">
+          <summary><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>Recipe details <span>optional</span></summary>
+          <div class="recipe-grid">
+            <label class="field">Coffee<span class="unit"><input type="text" inputmode="decimal" id="b-dose" placeholder="15"><i>g</i></span></label>
+            <label class="field">Water<span class="unit"><input type="text" inputmode="decimal" id="b-water" placeholder="250"><i>g</i></span></label>
+            <div class="ratio" id="ratio" aria-live="polite"><span>Ratio</span><b>–</b></div>
+            <label class="field">Grinder<input type="text" id="b-grinder" placeholder="e.g. Comandante"></label>
+            <label class="field">Setting<input type="text" id="b-setting" placeholder="e.g. 24 clicks"></label>
+            <label class="field">Water temp<span class="unit"><input type="text" inputmode="decimal" id="b-temp" placeholder="94"><i>°C</i></span></label>
+            <label class="field">Brew time<input type="text" inputmode="numeric" id="b-time" placeholder="2:30"></label>
+            <label class="field wide">Anything else about the recipe<input type="text" id="recipe" placeholder="e.g. 30 s bloom, two pours"></label>
+          </div>
+        </details>
       </div>
     </section>
 
@@ -274,7 +309,7 @@ const AGAIN = [['yes','Yes'],['maybe','Maybe'],['no','No']];
 
 let coffees = [], coffee = null;
 let r = blank();
-function blank(){ const me = store.get('me') || {}; return {by: me.by || '', city: me.city || '', score: null, tasting: [], profile: {}, method: [], recipe: '', again: '', notes: ''}; }
+function blank(){ const me = store.get('me') || {}; return {by: me.by || '', city: me.city || '', score: null, verdict: '', tasting: [], profile: {}, method: [], brew: {}, recipe: '', again: '', notes: ''}; }
 
 /* ---------- data ---------- */
 async function load(){
@@ -314,6 +349,12 @@ function renderAll(){
   renderSeg('city', CITIES.map(c => [c,c]), () => r.city, v => { r.city = v; remember(); });
   renderScale(); renderNotes(); renderProfile(); renderMethods();
   $('recipe').value = r.recipe;
+  $('verdict').value = r.verdict || '';
+  renderQuick();
+  const b = r.brew || {};
+  BREW.forEach(([id,k]) => $(id).value = b[k] ?? '');
+  $('more').open = Object.keys(b).length > 0 || !!r.recipe;
+  ratio();
   renderSeg('again', AGAIN, () => r.again, v => r.again = v);
   $('text').value = r.notes;
   progress();
@@ -393,6 +434,34 @@ function renderMethods(){
   }));
 }
 
+/* ---------- verdict + recipe details ---------- */
+const QUICK = ['Best so far','Would buy again','Great with milk','Interesting, not for every day','Not for me'];
+function renderQuick(){
+  $('quick').innerHTML = QUICK.map(q => `<button type="button" class="chip" data-q="${esc(q)}" aria-pressed="${r.verdict === q}">${esc(q)}</button>`).join('');
+  $('quick').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+    r.verdict = r.verdict === c.dataset.q ? '' : c.dataset.q; $('verdict').value = r.verdict;
+    $('quick').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', r.verdict === x.dataset.q)); changed();
+  }));
+}
+$('verdict').addEventListener('input', e => { r.verdict = e.target.value; $('quick').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', r.verdict === x.dataset.q)); changed(); });
+const BREW = [['b-dose','dose'],['b-water','water'],['b-grinder','grinder'],['b-setting','setting'],['b-temp','temp'],['b-time','time']];
+const NUMERIC = ['dose','water','temp'];
+BREW.forEach(([id,k]) => $(id).addEventListener('input', e => {
+  let v = e.target.value.trim();
+  if (NUMERIC.includes(k)) v = v.replace(',', '.');
+  r.brew = {...r.brew}; if (v) r.brew[k] = NUMERIC.includes(k) && !isNaN(+v) ? +v : v; else delete r.brew[k];
+  ratio(); changed();
+}));
+function ratio(){
+  const {dose, water} = r.brew || {}, el = $('ratio').querySelector('b');
+  el.textContent = dose > 0 && water > 0 ? '1:' + (water/dose).toFixed(1).replace(/\.0$/,'') : '–';
+}
+function brewLine(b, recipe){
+  b = b || {};
+  return [b.dose && b.water ? `${b.dose} g : ${b.water} g (1:${(b.water/b.dose).toFixed(1).replace(/\.0$/,'')})` : b.dose ? `${b.dose} g` : '',
+    [b.grinder, b.setting].filter(Boolean).join(' '), b.temp ? `${b.temp} °C` : '', b.time || '', recipe || ''].filter(Boolean).join(' · ');
+}
+
 /* ---------- state ---------- */
 function remember(){ store.set('me', {by: r.by, city: r.city}); }
 let saveT;
@@ -415,15 +484,16 @@ err.style.cssText = 'max-width:720px;margin:8px auto 0';
 
 function entry(){
   return {number: coffee.number, by: r.by.trim(), city: r.city || null, date: new Date().toISOString().slice(0,10),
-    score: r.score, tasting: r.tasting, profile: r.profile, method: r.method, recipe: r.recipe.trim(), again: r.again || null, notes: r.notes.trim()};
+    score: r.score, verdict: (r.verdict||'').trim(), tasting: r.tasting, profile: r.profile, method: r.method, brew: r.brew || {}, recipe: r.recipe.trim(), again: r.again || null, notes: r.notes.trim()};
 }
 function chatText(e){
   const p = PROFILE.filter(([k]) => e.profile[k]).map(([k,l]) => `${l} ${e.profile[k]}/5`).join(', ');
   return [`${coffee.number} ${coffee.name} (${coffee.roaster}): ${e.score}/10`,
     `From ${e.by}${e.city ? ', ' + e.city : ''}`,
+    e.verdict ? `"${e.verdict}"` : '',
     e.tasting.length ? `Tasted: ${e.tasting.join(', ')}` : '',
     p ? `Profile: ${p}` : '',
-    e.method.length ? `Brewed: ${e.method.join(', ')}${e.recipe ? ' (' + e.recipe + ')' : ''}` : '',
+    e.method.length || brewLine(e.brew, e.recipe) ? `Brewed: ${[e.method.join(', '), brewLine(e.brew, e.recipe)].filter(Boolean).join(' · ')}` : '',
     e.again ? `Buy a bag: ${({yes:'Yes',maybe:'Maybe',no:'No'})[e.again]}` : '',
     e.notes ? `\n${e.notes}` : ''].filter(Boolean).join('\n');
 }
@@ -472,10 +542,10 @@ function showDone(e, online){
     <h2>${online ? 'Saved' : 'Thanks'}, ${esc(e.by)}.</h2>
     <p class="hint">Here's your review of ${esc(coffee.number)} ${esc(coffee.name)}.</p>
     <div class="summary">
-      <div class="sum-head"><span class="s">${e.score}</span><b>${esc(coffee.name)}</b><span>${esc(WORDS[e.score])} · ${esc(e.by)}${e.city ? ', ' + esc(e.city) : ''}</span></div>
+      <div class="sum-head"><span class="s">${e.score}</span><b>${esc(coffee.name)}</b><span>${esc(e.verdict || WORDS[e.score])} · ${esc(e.by)}${e.city ? ', ' + esc(e.city) : ''}</span></div>
       ${e.tasting.length ? `<div class="sum-row"><span>Tasted</span><span>${esc(e.tasting.join(', '))}</span></div>` : ''}
       ${p ? `<div class="sum-row"><span>Profile</span><span>${esc(p)}</span></div>` : ''}
-      ${e.method.length ? `<div class="sum-row"><span>Brewed</span><span>${esc(e.method.join(', '))}${e.recipe ? ' · ' + esc(e.recipe) : ''}</span></div>` : ''}
+      ${e.method.length || brewLine(e.brew, e.recipe) ? `<div class="sum-row"><span>Brewed</span><span>${esc([e.method.join(', '), brewLine(e.brew, e.recipe)].filter(Boolean).join(' · '))}</span></div>` : ''}
       ${e.again ? `<div class="sum-row"><span>Buy a bag</span><span>${({yes:'Yes',maybe:'Maybe',no:'No'})[e.again]}</span></div>` : ''}
       ${e.notes ? `<div class="sum-row"><span>Notes</span><span>${esc(e.notes).replace(/\n/g,'<br>')}</span></div>` : ''}
     </div>

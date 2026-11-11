@@ -127,7 +127,8 @@
   .score b{font-size:28px;font-weight:600;color:var(--ink);letter-spacing:-0.02em;margin-right:4px}
   .rv-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
   .rv{display:grid;grid-template-columns:56px 1fr;gap:4px 16px;padding:16px 0;border-bottom:1px solid var(--line)}
-  .rv .s{font-size:28px;font-weight:600;letter-spacing:-0.02em;line-height:1;grid-row:span 4}
+  .rv .s{font-size:28px;font-weight:600;letter-spacing:-0.02em;line-height:1;grid-row:span 5}
+  .rv .vd{font-size:17px;font-weight:500;letter-spacing:-0.01em;margin:2px 0}
   .rv > :not(.s){grid-column:2}
   .rv .who{font-size:15px;font-weight:500}
   .rv .who span{font-weight:400;color:var(--ink-2)}
@@ -269,6 +270,11 @@ const reviewsFor = n => reviews.filter(r => r.number === n);
 const avg = list => list.length ? list.reduce((a,r) => a + Number(r.score||0), 0) / list.length : null;
 const fmt = v => v == null ? null : (Math.round(v*10)/10).toFixed(1).replace(/\.0$/,'');
 const detail = (c, label) => ((c.details||[]).find(r => r[0].toLowerCase() === label) || [,''])[1];
+function brewLine(b, recipe){
+  b = b || {};
+  return [b.dose && b.water ? `${b.dose} g : ${b.water} g (1:${(b.water/b.dose).toFixed(1).replace(/\.0$/,'')})` : b.dose ? `${b.dose} g` : '',
+    [b.grinder, b.setting].filter(Boolean).join(' '), b.temp ? `${b.temp} °C` : '', b.time || '', recipe || ''].filter(Boolean).join(' · ');
+}
 const nextNumber = () => String(Math.max(0, ...coffees.map(c => parseInt(c.number,10)||0)) + 1).padStart(2,'0');
 
 function renderHome(){
@@ -326,7 +332,8 @@ function renderCoffee(c){
       ${rv.length ? `<ul class="rv-list">${rv.map(r => `<li class="rv">
           <span class="s" style="color:${esc(tone(c.colour))}">${esc(r.score)}</span>
           <span class="who">${esc(r.by)}${r.city ? ` <span>· ${esc(r.city)}</span>` : ''}</span>
-          <span class="meta">${esc([[].concat(r.method||[]).join(', '), r.recipe].filter(Boolean).join(' · '))}</span>
+          ${r.verdict ? `<span class="vd">${esc(r.verdict)}</span>` : ''}
+          <span class="meta">${esc([[].concat(r.method||[]).join(', '), brewLine(r.brew, r.recipe)].filter(Boolean).join(' · '))}</span>
           ${(r.tasting||[]).length ? `<span class="meta">${esc(r.tasting.join(', '))}</span>` : ''}
           ${r.notes ? `<p>${esc(r.notes)}</p>` : ''}
         </li>`).join('')}</ul>`

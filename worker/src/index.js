@@ -52,15 +52,15 @@ export default {
         if (r.error) return json({ error: r.error }, 400, cors);
 
         await env.DB.prepare(
-          `INSERT INTO reviews (number, by_name, by_key, city, date, score, tasting, profile, method, recipe, again, notes)
-           VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)
+          `INSERT INTO reviews (number, by_name, by_key, city, date, score, tasting, profile, method, recipe, again, notes, verdict, brew)
+           VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)
            ON CONFLICT (number, by_key) DO UPDATE SET
              by_name = excluded.by_name, city = excluded.city, date = excluded.date, score = excluded.score,
              tasting = excluded.tasting, profile = excluded.profile, method = excluded.method, recipe = excluded.recipe,
-             again = excluded.again, notes = excluded.notes, updated_at = datetime('now')`
+             again = excluded.again, notes = excluded.notes, verdict = excluded.verdict, brew = excluded.brew, updated_at = datetime('now')`
         ).bind(r.number, r.by, r.by.toLowerCase(), r.city, r.date, r.score,
                JSON.stringify(r.tasting), JSON.stringify(r.profile), JSON.stringify(r.method),
-               r.recipe, r.again, r.notes).run();
+               r.recipe, r.again, r.notes, r.verdict, JSON.stringify(r.brew)).run();
 
         const saved = await listReviews(env, r.number);
         return json({ ok: true, review: saved.find(x => x.by.toLowerCase() === r.by.toLowerCase()) }, 200, cors);
@@ -98,14 +98,14 @@ async function codeOk(env, code) {
 }
 
 async function listReviews(env, number) {
-  const sql = `SELECT number, by_name, city, date, score, tasting, profile, method, recipe, again, notes, created_at, updated_at
+  const sql = `SELECT number, by_name, city, date, score, tasting, profile, method, recipe, again, notes, verdict, brew, created_at, updated_at
                FROM reviews ${number ? 'WHERE number = ?1' : ''} ORDER BY number, created_at`;
   const stmt = number ? env.DB.prepare(sql).bind(number) : env.DB.prepare(sql);
   const { results } = await stmt.all();
   return results.map(row => ({
     number: row.number, by: row.by_name, city: row.city, date: row.date, score: row.score,
     tasting: parse(row.tasting, []), profile: parse(row.profile, {}), method: parse(row.method, []),
-    recipe: row.recipe, again: row.again, notes: row.notes,
+    recipe: row.recipe, again: row.again, notes: row.notes, verdict: row.verdict || '', brew: parse(row.brew, {}),
     created: row.created_at, updated: row.updated_at,
   }));
 }
@@ -124,6 +124,15 @@ function validate(b) {
     const v = Number(b.profile?.[k]);
     if (Number.isInteger(v) && v >= 1 && v <= 5) profile[k] = v;
   }
+  const num = (v, lo, hi) => { const n = Math.round(Number(v) * 10) / 10; return Number.isFinite(n) && n >= lo && n <= hi ? n : undefined; };
+  const bw = b.brew || {}, brew = {};
+  const dose = num(bw.dose, 1, 100), water = num(bw.water, 1, 2000), temp = num(bw.temp, 40, 100);
+  if (dose !== undefined) brew.dose = dose;
+  if (water !== undefined) brew.water = water;
+  if (temp !== undefined) brew.temp = temp;
+  if (str(bw.grinder, 40)) brew.grinder = str(bw.grinder, 40);
+  if (str(bw.setting, 20)) brew.setting = str(bw.setting, 20);
+  if (/^\d{1,2}:\d{2}$/.test(str(bw.time, 5))) brew.time = str(bw.time, 5);
   const date = /^\d{4}-\d{2}-\d{2}$/.test(String(b.date)) ? String(b.date) : new Date().toISOString().slice(0, 10);
   return {
     number, by, score, profile, date,
@@ -133,12 +142,14 @@ function validate(b) {
     recipe: str(b.recipe, 200),
     again: AGAIN.includes(b.again) ? b.again : null,
     notes: str(b.notes, 4000),
+    verdict: str(b.verdict, 80),
+    brew,
   };
 }
 
 function toCSV(rows) {
-  const head = ['Coffee', 'Name', 'City', 'Date', 'Score', 'Tasting notes', ...PROFILE_KEYS.map(k => k[0].toUpperCase() + k.slice(1)),
-                'Brew method', 'Recipe', 'Buy a bag', 'Notes', 'Saved', 'Updated'];
+  const head = ['Coffee', 'Name', 'City', 'Date', 'Score', 'Verdict', 'Tasting notes', ...PROFILE_KEYS.map(k => k[0].toUpperCase() + k.slice(1)),
+                'Brew method', 'Coffee (g)', 'Water (g)', 'Ratio', 'Grinder', 'Setting', 'Water temp (C)', 'Brew time', 'Recipe', 'Buy a bag', 'Notes', 'Saved', 'Updated'];
   const cell = v => {
     const s = v == null ? '' : String(v);
     // stop spreadsheets reading text as formulas
@@ -146,9 +157,10 @@ function toCSV(rows) {
     return /[",\n\r]/.test(safe) ? '"' + safe.replace(/"/g, '""') + '"' : safe;
   };
   const lines = rows.map(r => [
-    '#' + r.number, r.by, r.city, r.date, r.score, r.tasting.join(', '),
+    '#' + r.number, r.by, r.city, r.date, r.score, r.verdict, r.tasting.join(', '),
     ...PROFILE_KEYS.map(k => r.profile[k] ?? ''),
-    r.method.join(', '), r.recipe, r.again, r.notes, r.created, r.updated,
+    r.method.join(', '), r.brew.dose ?? '', r.brew.water ?? '', r.brew.dose && r.brew.water ? '1:' + (r.brew.water / r.brew.dose).toFixed(1) : '',
+    r.brew.grinder ?? '', r.brew.setting ?? '', r.brew.temp ?? '', r.brew.time ?? '', r.recipe, r.again, r.notes, r.created, r.updated,
   ].map(cell).join(','));
   return [head.map(cell).join(','), ...lines].join('\r\n') + '\r\n';
 }
