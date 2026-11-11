@@ -3,12 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script src="../assets/theme.js"></script>
 <title>Coffee exchange globe</title>
 <style>
   :root{
     --blue:#0000FF; --ink:#14171F; --ink-2:#4E5566; --rule:#C9CED8; --bg:#FFFFFF;
-    --font:"Helvetica Neue",Helvetica,"TeX Gyre Heros",Arial,sans-serif;
+    --font:"Helvetica Neue",Helvetica,"TeX Gyre Heros",Arial,sans-serif; --on-blue:#FFFFFF;
   }
+  :root[data-theme=dark]{--blue:#93A3FF; --ink:#FFFFFF; --ink-2:#B7BFCF; --rule:#3A4560; --bg:#141B2A; --on-blue:#141B2A}
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased}
   body.transparent{--bg:transparent}
@@ -20,7 +23,7 @@
   .seg button{all:unset;cursor:pointer;font-size:13px;line-height:1;padding:7px 12px;border-radius:999px;color:var(--ink-2);transition:background-color .2s ease-out,color .2s ease-out}
   .seg button:hover{color:var(--ink)}
   .seg button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
-  .seg button[aria-pressed="true"]{background:var(--blue);color:#fff}
+  .seg button[aria-pressed="true"]{background:var(--blue);color:var(--on-blue)}
   .num{font-weight:600;font-variant-numeric:tabular-nums;margin-right:6px}
   .coffee-list button[aria-pressed="true"]{border-top-color:var(--c)}
   .coffee-list button[aria-pressed="true"] .name{color:var(--ink)}
@@ -65,8 +68,17 @@ const GEO={"dots":[-691,-550,-665,-550,-730,-535,-718,-520,-693,-520,-753,-505,-
   if (q.get('bg') === 'transparent') document.body.classList.add('transparent');
   if (q.get('controls') === '0') document.body.classList.add('no-controls');
   if (q.get('caption') === '0') document.body.classList.add('no-caption');
-  const BLUE = q.get('color') ? '#' + q.get('color').replace('#','') : '#0000FF';
-  const INK = '#14171F', INK2 = '#4E5566';
+  const BLUE_SET = q.get('color') ? '#' + q.get('color').replace('#','') : null;
+  let BLUE, INK, INK2, HALO, PAPER, ON;
+  const tone = h => window.cxTheme ? cxTheme.tone(h) : h;
+  function palette(){
+    const dark = window.cxTheme && cxTheme.get() === 'dark';
+    BLUE = BLUE_SET ? tone(BLUE_SET) : (dark ? '#93A3FF' : '#0000FF');
+    INK = dark ? '#FFFFFF' : '#14171F'; INK2 = dark ? '#B7BFCF' : '#4E5566';
+    HALO = dark ? 'rgba(20,27,42,.9)' : 'rgba(255,255,255,.92)';
+    PAPER = dark ? '#141B2A' : '#FFFFFF'; ON = PAPER;
+  }
+  palette();
   const FONT = '"Helvetica Neue",Helvetica,Arial,sans-serif';
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const RAD = Math.PI/180;
@@ -153,7 +165,7 @@ const GEO={"dots":[-691,-550,-665,-550,-730,-535,-718,-520,-693,-520,-753,-505,-
 
   const hits = [];
   function halo(text, x, y, fill){
-    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,.92)'; ctx.lineJoin = 'round';
+    ctx.lineWidth = 4; ctx.strokeStyle = HALO; ctx.lineJoin = 'round';
     ctx.strokeText(text, x, y); ctx.fillStyle = fill; ctx.fillText(text, x, y);
   }
 
@@ -182,7 +194,7 @@ const GEO={"dots":[-691,-550,-665,-550,-730,-535,-718,-520,-693,-520,-753,-505,-
     ctx.globalAlpha = .08; ctx.fill(back);
     ctx.globalAlpha = 1 - 0.8*t; ctx.fill(front);
     if (t>0) origins.forEach((o,gi) => {
-      const ci = o.coffees[o.coffees.length-1], col = COFFEES[ci].colour;
+      const ci = o.coffees[o.coffees.length-1], col = tone(COFFEES[ci].colour);
       const dim = activeCoffee!=null && !o.coffees.includes(activeCoffee) ? 0.3 : 1;
       ctx.fillStyle = BLUE; ctx.globalAlpha = 1-t; ctx.fill(groups[gi]);
       ctx.fillStyle = col;  ctx.globalAlpha = t*dim; ctx.fill(groups[gi]);
@@ -218,9 +230,9 @@ const GEO={"dots":[-691,-550,-665,-550,-730,-535,-718,-520,-693,-520,-753,-505,-
         ctx.strokeStyle = BLUE; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(px, py+pr*s); ctx.stroke();
         ctx.beginPath(); ctx.arc(px,py,pr*s,0,6.2832);
-        ctx.fillStyle = isActive ? BLUE : '#FFFFFF'; ctx.fill(); ctx.stroke();
+        ctx.fillStyle = isActive ? BLUE : PAPER; ctx.fill(); ctx.stroke();
         ctx.save(); ctx.translate(px, py+1); const k = pr*s/13; ctx.scale(k,k);
-        const fg = isActive ? '#FFFFFF' : BLUE;
+        const fg = isActive ? ON : BLUE;
         ctx.fillStyle = fg; ctx.strokeStyle = fg; ctx.lineWidth = 1.6; ctx.lineCap='round'; ctx.lineJoin='round';
         ctx.fill(cup); ctx.stroke(handle); ctx.stroke(saucer); ctx.lineWidth=1.3; ctx.stroke(steam);
         ctx.restore();
@@ -248,7 +260,7 @@ const GEO={"dots":[-691,-550,-665,-550,-730,-535,-718,-520,-693,-520,-753,-505,-
         const nums = p.o.coffees.map(ci => COFFEES[ci]);
         nums.forEach((c,i) => { w += ctx.measureText(c.number).width + (i ? 6 : 0); });
         x = p.x - w/2;
-        nums.forEach(c => { halo(c.number, x, p.y, c.colour); x += ctx.measureText(c.number).width + 6; });
+        nums.forEach(c => { halo(c.number, x, p.y, tone(c.colour)); x += ctx.measureText(c.number).width + 6; });
         ctx.font = `500 ${fs*0.9}px ${FONT}`; ctx.textAlign='center';
         halo(p.o.name, p.x, p.y + fs*1.25, INK2);
         ctx.globalAlpha = 1;
@@ -353,8 +365,8 @@ const GEO={"dots":[-691,-550,-665,-550,-730,-535,-718,-520,-693,-520,-753,-505,-
       box.querySelectorAll('button').forEach(b => b.addEventListener('click', () => goToCity(b.dataset.id)));
       clock();
     } else {
-      box.innerHTML = COFFEES.map((c,i) => `<button type="button" data-i="${i}" aria-pressed="${activeCoffee===i}" style="--c:${esc(c.colour)}">
-        <span class="name"><span class="num" style="color:${esc(c.colour)}">${esc(c.number)}</span>${esc(c.name)}</span>
+      box.innerHTML = COFFEES.map((c,i) => `<button type="button" data-i="${i}" aria-pressed="${activeCoffee===i}" style="--c:${esc(tone(c.colour))}">
+        <span class="name"><span class="num" style="color:${esc(tone(c.colour))}">${esc(c.number)}</span>${esc(c.name)}</span>
         <span class="time">${esc(c.roaster)}</span></button>`).join('');
       box.querySelectorAll('button').forEach(b => b.addEventListener('click', () => goToCoffee(+b.dataset.i)));
     }
@@ -369,7 +381,7 @@ const GEO={"dots":[-691,-550,-665,-550,-730,-535,-718,-520,-693,-520,-753,-505,-
   // pull the live coffee list from the repo when hosted next to data/ (fails quietly elsewhere)
   if (/github\.io$|^localhost$|^127\./.test(location.hostname)) fetch('../data/coffees.json', {cache:'no-cache'}).then(r => r.ok ? r.json() : null).then(d => {
     if (!d || !Array.isArray(d.coffees) || !d.coffees.length) return;
-    COFFEES = d.coffees.map(c => ({number:c.number, name:c.name, roaster:c.roaster, colour:c.colour || BLUE, origins:c.origins || []}));
+    COFFEES = d.coffees.map(c => ({number:c.number, name:c.name, roaster:c.roaster, colour:c.colour || '#0000FF', origins:c.origins || []}));
     indexCoffees(); renderList();
   }).catch(() => {});
 
@@ -388,6 +400,7 @@ const GEO={"dots":[-691,-550,-665,-550,-730,-535,-718,-520,-693,-520,-753,-505,-
   const _goToCoffee = goToCoffee;
   goToCoffee = ci => { _goToCoffee(ci); if (activeCoffee === ci && COFFEES[ci]) tell(COFFEES[ci].number); };
 
+  if (window.cxTheme) cxTheme.onChange(() => { palette(); renderList(); draw(performance.now()); });
   resize();
   setMode(location.hash==='#coffees' || q.get('mode')==='coffees' ? 'coffees' : 'cities', true);
   requestAnimationFrame(tick);

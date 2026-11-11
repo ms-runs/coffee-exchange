@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script src="../assets/theme.js"></script>
 <title>Card maker · Coffee exchange</title>
 <style>
   :root{
@@ -10,9 +12,18 @@
     --rule:#C9CED8; --line:#E3E6EC; --wash:#F4F5F8; --field:#FFFFFF; --warn:#A33A00; --warn-wash:#FFF3EC;
     --font:"Helvetica Neue",Helvetica,"TeX Gyre Heros",Arial,sans-serif;
     --r:8px;
+  
+    --bg:#FFFFFF; --on-blue:#FFFFFF;
   }
+  :root[data-theme=dark]{
+    --bg:#141B2A; --field:#182033; --ink:#FFFFFF; --ink-2:#B7BFCF; --ink-3:#8C95A8;
+    --rule:#3A4560; --line:#262F45; --wash:#1D2538;
+    --blue:#93A3FF; --blue-press:#B3BEFF; --on-blue:#141B2A; --bar:rgba(20,27,42,.92);
+    --warn:#FFB38A; --warn-wash:#3A2418;
+  }
+
   *{box-sizing:border-box}
-  html,body{margin:0;background:#fff;color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased}
   body{font-variant-numeric:tabular-nums}
   button,input,select,textarea{font:inherit;color:inherit}
 
@@ -21,6 +32,11 @@
   header.top p{margin:8px 0 0;color:var(--ink-2);font-size:15px;max-width:46ch;line-height:1.4}
   header.top a{color:var(--blue);font-size:14px;text-decoration:none}
   header.top a:hover{text-decoration:underline;text-underline-offset:3px}
+  .top-r{display:flex;align-items:center;gap:12px}
+  .theme{all:unset;box-sizing:border-box;cursor:pointer;width:36px;height:36px;margin-right:-8px;display:grid;place-items:center;border-radius:8px;color:var(--ink-2)}
+  .theme:hover{background:var(--wash);color:var(--ink)}
+  .theme:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+  :root[data-theme=dark] .paper{box-shadow:0 0 0 1px var(--line),0 12px 32px rgba(0,0,0,.35)}
 
   main{max-width:1180px;margin:0 auto;padding:24px 24px 64px;display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:40px;align-items:start}
 
@@ -57,11 +73,11 @@
   .icon-btn:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
   .icon-btn svg{width:16px;height:16px}
 
-  .btn{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:var(--r);font-size:15px;font-weight:500;cursor:pointer;border:1px solid var(--rule);background:#fff;color:var(--ink);transition:background-color .15s ease-out,border-color .15s ease-out,color .15s ease-out;white-space:nowrap}
+  .btn{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:var(--r);font-size:15px;font-weight:500;cursor:pointer;border:1px solid var(--rule);background:var(--field);color:var(--ink);transition:background-color .15s ease-out,border-color .15s ease-out,color .15s ease-out;white-space:nowrap}
   .btn:hover{border-color:var(--ink-3)}
   .btn:active{background:var(--wash)}
   .btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
-  .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;height:48px;font-size:16px}
+  .btn.primary{background:var(--blue);border-color:var(--blue);color:var(--on-blue);height:48px;font-size:16px}
   .btn.primary:hover{background:var(--blue-press);border-color:var(--blue-press)}
   .btn.ghost{border-color:transparent;color:var(--blue);padding:0 8px;height:36px}
   .btn.ghost:hover{background:var(--wash)}
@@ -71,7 +87,7 @@
 
   /* Photo */
   .drop{position:relative;display:grid;grid-template-columns:72px 1fr;gap:16px;align-items:center;padding:12px;border:1px dashed var(--rule);border-radius:var(--r);cursor:pointer;transition:border-color .15s ease-out,background-color .15s ease-out}
-  .drop:hover,.drop.over{border-color:var(--blue);background:#F7F7FF}
+  .drop:hover,.drop.over{border-color:var(--blue);background:var(--wash)}
   .drop:focus-within{outline:2px solid var(--blue);outline-offset:2px}
   .drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
   .thumb{width:72px;height:90px;border-radius:4px;background:#EEF1F7;display:grid;place-items:center;overflow:hidden;color:var(--ink-3)}
@@ -86,8 +102,8 @@
   .sw{all:unset;box-sizing:border-box;position:relative;width:56px;height:56px;border-radius:10px;cursor:pointer;display:flex;align-items:flex-end;padding:6px;color:#fff;font-size:11px;font-weight:500;transition:transform .15s ease-out}
   .sw:hover{transform:translateY(-1px)}
   .sw:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
-  .sw[aria-pressed=true]{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink)}
-  .sw.custom{background:#fff;border:1px dashed var(--rule);color:var(--ink-2);align-items:center;justify-content:center;padding:0}
+  .sw[aria-pressed=true]{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ink)}
+  .sw.custom{background:var(--field);border:1px dashed var(--rule);color:var(--ink-2);align-items:center;justify-content:center;padding:0}
   .sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
   .sw.custom svg{width:18px;height:18px}
   .swatch-note{font-size:13px;color:var(--ink-2);line-height:1.4}
@@ -103,7 +119,7 @@
   .sheet-empty{font-size:13px;color:var(--ink-2);padding:12px 0;border-top:1px solid var(--ink);margin:0}
   .actions{display:flex;flex-direction:column;gap:10px}
   .actions .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,12px);background:var(--ink);color:#fff;font-size:14px;padding:10px 16px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s ease-out,transform .2s ease-out}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,12px);background:var(--ink);color:var(--bg);font-size:14px;padding:10px 16px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s ease-out,transform .2s ease-out}
   .toast.on{opacity:1;transform:translate(-50%,0)}
   .muted{font-size:13px;color:var(--ink-2);line-height:1.45;margin:0}
   .muted code{font-family:ui-monospace,Menlo,monospace;font-size:12px}
@@ -122,7 +138,7 @@
     <h1>Card maker</h1>
     <p>Fill in the coffee, check the card, then print one A6 card or four to an A4 sheet.</p>
   </div>
-  <a href="../">Coffee exchange</a>
+  <span class="top-r"><a href="../">Coffee exchange</a><button type="button" class="theme" data-theme-toggle aria-label="Switch to dark mode"></button></span>
 </header>
 
 <main>
@@ -505,7 +521,7 @@ function renderSwatches(){
   const cw = document.createElement('label'); cw.className = 'sw custom'; cw.title = 'Choose a colour';
   if (isCustom){ cw.style.background = card.colour; cw.style.border = '0'; cw.style.color = '#fff'; cw.style.alignItems = 'flex-end'; cw.style.justifyContent = 'flex-start'; cw.style.padding = '6px'; cw.setAttribute('aria-pressed','true'); }
   cw.innerHTML = (isCustom ? card.colour.slice(1) : '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>') + `<input type="color" aria-label="Choose your own colour" value="${card.colour}">`;
-  if (isCustom) cw.style.boxShadow = '0 0 0 2px #fff,0 0 0 4px #14171F';
+  if (isCustom) cw.style.boxShadow = '0 0 0 2px var(--bg),0 0 0 4px var(--ink)';
   const ci = cw.querySelector('input');
   ci.addEventListener('input', () => { card.colour = ci.value.toUpperCase(); changed(); });
   ci.addEventListener('change', () => renderSwatches());
@@ -535,7 +551,7 @@ function renderSheet(){
   if (!sheet.length){ box.innerHTML = '<p class="sheet-empty">The A4 sheet is empty. Add this card, or fill all four spots with it.</p>'; }
   else {
     const pages = Math.ceil(sheet.length/4);
-    box.innerHTML = `<ul class="sheet-list" aria-label="Cards on the sheet">${sheet.map((c,i) => `<li><span class="n" style="color:${c.colour}">${esc(c.number||'00')}</span><span>${esc(c.name||'Untitled')}<span class="who">${c.pickedBy ? ' · ' + esc(c.pickedBy) : ''}</span></span><button type="button" class="icon-btn" data-rm="${i}" aria-label="Remove ${esc(c.name||'card')} from sheet">${ICON_X}</button></li>`).join('')}</ul>
+    box.innerHTML = `<ul class="sheet-list" aria-label="Cards on the sheet">${sheet.map((c,i) => `<li><span class="n" style="color:${window.cxTheme ? cxTheme.tone(c.colour) : c.colour}">${esc(c.number||'00')}</span><span>${esc(c.name||'Untitled')}<span class="who">${c.pickedBy ? ' · ' + esc(c.pickedBy) : ''}</span></span><button type="button" class="icon-btn" data-rm="${i}" aria-label="Remove ${esc(c.name||'card')} from sheet">${ICON_X}</button></li>`).join('')}</ul>
       <p class="muted" style="margin-top:8px">${sheet.length} card${sheet.length>1?'s':''} · ${pages} A4 page${pages>1?'s':''}</p>`;
     box.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => { sheet.splice(+b.dataset.rm, 1); renderSheet(); save(); }));
   }
@@ -629,6 +645,7 @@ async function init(){
   fillForm(); render(); renderSheet();
   if (!hasPdf) toast('PDF tools did not load. Refresh to try again.');
 }
+if (window.cxTheme) cxTheme.onChange(() => renderSheet());
 init();
 })();
 </script>

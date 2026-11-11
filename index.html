@@ -3,16 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script src="assets/theme.js"></script>
 <title>Coffee exchange</title>
 <style>
   :root{
     --blue:#0000FF; --blue-press:#0000C8; --ink:#14171F; --ink-2:#4E5566; --ink-3:#6B7282;
     --rule:#C9CED8; --line:#E3E6EC; --wash:#F4F5F8;
     --font:"Helvetica Neue",Helvetica,"TeX Gyre Heros",Arial,sans-serif;
+  
+    --bg:#FFFFFF; --field:#FFFFFF; --on-blue:#FFFFFF; --bar:rgba(255,255,255,.94);
   }
+  :root[data-theme=dark]{
+    --bg:#141B2A; --field:#182033; --ink:#FFFFFF; --ink-2:#B7BFCF; --ink-3:#8C95A8;
+    --rule:#3A4560; --line:#262F45; --wash:#1D2538;
+    --blue:#93A3FF; --blue-press:#B3BEFF; --on-blue:#141B2A; --bar:rgba(20,27,42,.92);
+    --warn:#FFB38A; --warn-wash:#3A2418;
+  }
+
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
-  body{margin:0;background:#fff;color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
   a{color:var(--blue);text-decoration:none}
   a:hover{text-decoration:underline;text-underline-offset:3px}
   :focus-visible{outline:2px solid var(--blue);outline-offset:3px}
@@ -26,6 +37,11 @@
   nav a{color:var(--ink-2)}
   nav a:hover{color:var(--ink);text-decoration:none}
   nav a[aria-current=page]{color:var(--ink)}
+  nav{align-items:center}
+  .theme{all:unset;box-sizing:border-box;cursor:pointer;width:36px;height:36px;margin:-8px -8px -8px 0;display:grid;place-items:center;border-radius:8px;color:var(--ink-2);transition:background-color .15s ease-out,color .15s ease-out}
+  .theme:hover{background:var(--wash);color:var(--ink)}
+  .theme:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+  .bar{align-items:center}
 
   /* Two columns: the record scrolls, the globe stays */
   .layout{max-width:1240px;margin:0 auto;padding:0 24px 80px;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:56px;align-items:start}
@@ -49,7 +65,7 @@
 
   /* Record grid: hairline Swiss grid */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1px;background:var(--rule);border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);margin:0 -16px;border-left:0}
-  .tile{all:unset;box-sizing:border-box;background:#fff;padding:16px 16px 18px;display:flex;flex-direction:column;min-height:236px;cursor:pointer;transition:background-color .2s ease-out}
+  .tile{all:unset;box-sizing:border-box;background:var(--bg);padding:16px 16px 18px;display:flex;flex-direction:column;min-height:236px;cursor:pointer;transition:background-color .2s ease-out}
   .tile:hover{background:var(--wash)}
   .tile:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
   .tile .n{font-size:96px;font-weight:600;letter-spacing:-0.05em;line-height:.8;margin:0 0 auto;transition:transform .25s ease-out}
@@ -60,7 +76,7 @@
   .tile .ft b{font-weight:500;color:var(--ink)}
   .tile .ft>:last-child{white-space:nowrap}
   .tile.next{cursor:default}
-  .tile.next:hover{background:#fff}
+  .tile.next:hover{background:var(--bg)}
   .tile.next .n{color:var(--line)}
   .tile.next .nm{color:var(--ink-3);font-weight:500}
 
@@ -106,7 +122,7 @@
   .rv .who span{font-weight:400;color:var(--ink-2)}
   .rv .meta{font-size:14px;color:var(--ink-2)}
   .rv p{margin:4px 0 0;font-size:15px;line-height:1.45}
-  .rate{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 18px;border-radius:10px;background:var(--blue);color:#fff;font-size:15px;font-weight:500;margin:0 0 20px}
+  .rate{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 18px;border-radius:10px;background:var(--blue);color:var(--on-blue);font-size:15px;font-weight:500;margin:0 0 20px}
   .rate:hover{background:var(--blue-press);text-decoration:none}
   .empty{border-top:1px solid var(--ink);padding:20px 0 4px}
   .empty p{margin:0 0 6px;font-size:16px}
@@ -154,6 +170,7 @@
     <a href="#globe" data-globe>Globe</a>
     <a href="ratings/">Rate</a>
     <a href="cards/">Card maker</a>
+    <button type="button" class="theme" data-theme-toggle aria-label="Switch to dark mode"></button>
   </nav>
 </header>
 
@@ -199,6 +216,7 @@
 (() => {
 'use strict';
 const $ = id => document.getElementById(id);
+const tone = h => window.cxTheme ? cxTheme.tone(h) : h;
 const esc = s => String(s ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
 const ICON = {
   back:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3L5 8l5 5"/></svg>',
@@ -237,7 +255,7 @@ function renderHome(){
   const tiles = coffees.slice().reverse().map(c => {
     const rv = reviewsFor(c.number), a = fmt(avg(rv));
     return `<a class="tile" role="listitem" href="#coffee-${esc(c.number)}" data-n="${esc(c.number)}">
-      <span class="n" style="color:${esc(c.colour)}">${esc(c.number)}</span>
+      <span class="n" style="color:${esc(tone(c.colour))}">${esc(c.number)}</span>
       <span class="nm">${esc(c.name)}</span>
       <span class="rs">${esc(c.roaster)}</span>
       <span class="ft"><span>${esc((c.origins||[]).join(', ') || detail(c,'origin') || '—')}</span>${a ? `<b>${a}<span style="color:var(--ink-2);font-weight:400">/${scale}</span></b>` : '<span>Not rated</span>'}</span>
@@ -256,7 +274,7 @@ function renderCoffee(c){
   $('coffee').innerHTML = `
     <a class="back" href="#" data-home>${ICON.back}All coffees</a>
     <div class="c-head">
-      <span class="c-num" style="color:${esc(c.colour)}">${esc(c.number)}</span>
+      <span class="c-num" style="color:${esc(tone(c.colour))}">${esc(c.number)}</span>
       <h2 class="c-name">${esc(c.name)}</h2>
       <p class="c-rs">${esc([c.roaster, c.roasterCity].filter(Boolean).join(' · '))}${c.pickedBy ? ` · Picked by ${esc(c.pickedBy)}` : ''}</p>
     </div>
@@ -277,7 +295,7 @@ function renderCoffee(c){
       <div class="head"><h2 id="rv-h">Ratings</h2>${a ? `<span class="score"><b>${a}</b>/${scale} from ${rv.length}</span>` : ''}</div>
       <a class="rate" href="ratings/?coffee=${esc(c.number)}">Rate ${esc(c.number)} ${esc(c.name)}</a>
       ${rv.length ? `<ul class="rv-list">${rv.map(r => `<li class="rv">
-          <span class="s" style="color:${esc(c.colour)}">${esc(r.score)}</span>
+          <span class="s" style="color:${esc(tone(c.colour))}">${esc(r.score)}</span>
           <span class="who">${esc(r.by)}${r.city ? ` <span>· ${esc(r.city)}</span>` : ''}</span>
           <span class="meta">${esc([[].concat(r.method||[]).join(', '), r.recipe].filter(Boolean).join(' · '))}</span>
           ${(r.tasting||[]).length ? `<span class="meta">${esc(r.tasting.join(', '))}</span>` : ''}
@@ -320,6 +338,7 @@ addEventListener('hashchange', route);
 addEventListener('popstate', route);
 
 load().then(() => { renderHome(); route(); });
+if (window.cxTheme) cxTheme.onChange(() => { if (!coffees.length) return; renderHome(); const m = location.hash.match(/^#coffee-(\d+)$/), c = m && coffees.find(c => c.number === m[1]); if (c) renderCoffee(c); });
 // the globe may load after us: re-send the current coffee once it's ready
 $('globe-frame').addEventListener('load', () => { const m = location.hash.match(/^#coffee-(\d+)$/); if (m) setTimeout(() => globe({coffee:m[1]}), 300); });
 })();
