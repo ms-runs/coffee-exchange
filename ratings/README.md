@@ -1,5 +1,19 @@
-# Ratings page
+# Rate a coffee
 
-Roadmap step 3. A grid of coffee numbers in their colours; each opens to its card, bag photo and the group's reviews (score, what they liked, brew method and recipe, notes). A QR code on each card opens that coffee's review form. Inspired by, or feeding into, Sergio's coffee rating page.
+Roadmap step 3. One page per person per coffee: `ratings/?coffee=02` (this is what the QR code on each card will open).
 
-Storage: Cloudflare D1 behind the Worker, or a Google Form/Sheet. Decide once Sergio's page is reviewed.
+- Coffee header in that coffee's colour; switch coffee from the header.
+- Name and city (remembered on the phone), score out of 10 (required), tasting-note chips grouped as fruity, sweet, nutty, floral, spice and roast, other and texture, plus your own notes. Notes the roaster lists are marked with a dot.
+- How it felt: acidity, body, sweetness, bitterness and finish on five steps each.
+- Brew method chips and an optional recipe, "Would you buy a bag?", and free-text notes.
+- Drafts save on the phone as you go. Saving shows a summary with "Copy for the group chat" and "Copy as data" (an entry for `data/reviews.json`).
+
+Review shape in `data/reviews.json`:
+
+```json
+{"number":"01","by":"Miguel","city":"London","date":"2026-11-11","score":8,
+ "tasting":["Cherry","Toffee"],"profile":{"acidity":3,"body":4},
+ "method":["Moka pot"],"recipe":"15 g, medium heat","again":"yes","notes":"Sweeter as it cooled."}
+```
+
+Storage: for now reviews are pasted into the group chat and added to `data/reviews.json`. Next: Cloudflare D1 behind the Worker so Save writes straight to the site.

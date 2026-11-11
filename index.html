@@ -106,6 +106,8 @@
   .rv .who span{font-weight:400;color:var(--ink-2)}
   .rv .meta{font-size:14px;color:var(--ink-2)}
   .rv p{margin:4px 0 0;font-size:15px;line-height:1.45}
+  .rate{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 18px;border-radius:10px;background:var(--blue);color:#fff;font-size:15px;font-weight:500;margin:0 0 20px}
+  .rate:hover{background:var(--blue-press);text-decoration:none}
   .empty{border-top:1px solid var(--ink);padding:20px 0 4px}
   .empty p{margin:0 0 6px;font-size:16px}
   .empty span{font-size:14px;color:var(--ink-2);line-height:1.5;display:block;max-width:52ch}
@@ -150,6 +152,7 @@
   <nav aria-label="Site">
     <a href="#" data-home aria-current="page">Record</a>
     <a href="#globe" data-globe>Globe</a>
+    <a href="ratings/">Rate</a>
     <a href="cards/">Card maker</a>
   </nav>
 </header>
@@ -272,13 +275,15 @@ function renderCoffee(c){
     </div>
     <section class="reviews" aria-labelledby="rv-h">
       <div class="head"><h2 id="rv-h">Ratings</h2>${a ? `<span class="score"><b>${a}</b>/${scale} from ${rv.length}</span>` : ''}</div>
+      <a class="rate" href="ratings/?coffee=${esc(c.number)}">Rate ${esc(c.number)} ${esc(c.name)}</a>
       ${rv.length ? `<ul class="rv-list">${rv.map(r => `<li class="rv">
           <span class="s" style="color:${esc(c.colour)}">${esc(r.score)}</span>
           <span class="who">${esc(r.by)}${r.city ? ` <span>· ${esc(r.city)}</span>` : ''}</span>
-          <span class="meta">${esc([r.method, r.recipe].filter(Boolean).join(' · '))}</span>
-          ${r.liked || r.notes ? `<p>${esc([r.liked, r.notes].filter(Boolean).join(' '))}</p>` : ''}
+          <span class="meta">${esc([[].concat(r.method||[]).join(', '), r.recipe].filter(Boolean).join(' · '))}</span>
+          ${(r.tasting||[]).length ? `<span class="meta">${esc(r.tasting.join(', '))}</span>` : ''}
+          ${r.notes ? `<p>${esc(r.notes)}</p>` : ''}
         </li>`).join('')}</ul>`
-      : `<div class="empty"><p>No ratings for ${esc(c.number)} yet.</p><span>Each of us will add a score out of ${scale}, what we liked, how we brewed it and any notes. The QR code on the card will open the form.</span></div>`}
+      : `<div class="empty"><p>No ratings for ${esc(c.number)} yet.</p><span>Score it out of ${scale}, tap what you tasted, say how you brewed it and add any notes.</span></div>`}
     </section>
     <nav class="pager" aria-label="More coffees">
       ${prev ? `<a href="#coffee-${esc(prev.number)}"><span>Previous</span>${esc(prev.number)} ${esc(prev.name)}</a>` : '<span></span>'}

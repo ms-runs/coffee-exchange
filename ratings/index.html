@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rate a coffee · Coffee exchange</title>
+<style>
+  :root{
+    --c:#0000FF; --c-wash:rgba(0,0,255,.08);
+    --blue:#0000FF; --blue-press:#0000C8; --ink:#14171F; --ink-2:#4E5566; --ink-3:#6B7282;
+    --rule:#C9CED8; --line:#E3E6EC; --wash:#F4F5F8; --warn:#A33A00;
+    --font:"Helvetica Neue",Helvetica,"TeX Gyre Heros",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#fff;color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+  button,input,select,textarea{font:inherit;color:inherit}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline;text-underline-offset:3px}
+  :focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+  .bar{max-width:720px;margin:0 auto;padding:20px 20px 0;display:flex;justify-content:space-between;align-items:baseline;font-size:15px}
+  .bar .mark{font-weight:600;color:var(--ink);white-space:nowrap}
+  .bar .mark:hover{text-decoration:none}
+
+  main{max-width:720px;margin:0 auto;padding:24px 20px 120px}
+
+  /* Coffee header */
+  .coffee{display:grid;grid-template-columns:auto 1fr;gap:4px 20px;align-items:end;padding-bottom:20px;border-bottom:1px solid var(--ink)}
+  .coffee .n{font-size:112px;font-weight:600;letter-spacing:-0.05em;line-height:.78;color:var(--c);grid-row:span 3;transition:color .3s ease-out}
+  .coffee h1{font-size:34px;font-weight:600;letter-spacing:-0.03em;line-height:1;margin:0}
+  .coffee p{margin:0;font-size:15px;color:var(--ink-2)}
+  .coffee select{all:unset;cursor:pointer;font-size:14px;color:var(--blue);margin-top:6px;display:inline-flex}
+  .coffee select:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .switch{position:relative;display:inline-flex;align-items:center;gap:4px;font-size:14px;color:var(--blue);margin-top:8px}
+  .switch select{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .switch svg{width:14px;height:14px}
+
+  /* Sections */
+  section{padding:28px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:19px;font-weight:600;letter-spacing:-0.01em;margin:0 0 4px}
+  .hint{font-size:14px;color:var(--ink-2);margin:0 0 16px;line-height:1.4}
+  .req{font-size:13px;color:var(--ink-3);font-weight:400;margin-left:6px}
+
+  input[type=text],textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:#fff;font-size:16px;padding:0 14px;height:48px;transition:border-color .15s ease-out}
+  textarea{height:auto;min-height:128px;padding:12px 14px;line-height:1.45;resize:vertical}
+  input[type=text]:hover,textarea:hover{border-color:var(--ink-3)}
+  input[type=text]:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,0,255,.14)}
+  .field{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--ink-2)}
+  .stack{display:flex;flex-direction:column;gap:16px}
+
+  /* Segmented + chips */
+  .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--rule);border-radius:10px;padding:3px;gap:3px}
+  .seg button{all:unset;box-sizing:border-box;cursor:pointer;text-align:center;font-size:15px;padding:10px 4px;border-radius:7px;color:var(--ink-2);transition:background-color .15s ease-out,color .15s ease-out}
+  .seg button:hover{color:var(--ink);background:var(--wash)}
+  .seg button:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+  .seg button[aria-pressed=true],.seg button[aria-pressed=true]:hover{background:var(--ink);color:#fff}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;border:1px solid var(--rule);border-radius:999px;font-size:15px;transition:border-color .15s ease-out,background-color .15s ease-out}
+  .chip:hover{border-color:var(--ink-3)}
+  .chip:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .chip[aria-pressed=true]{border-color:var(--c);background:var(--c-wash);box-shadow:inset 0 0 0 1px var(--c)}
+  .chip .tick{width:14px;height:14px;display:none}
+  .chip[aria-pressed=true] .tick{display:block;color:var(--c)}
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--c)}
+  .chip.own{border-style:dashed;color:var(--blue)}
+  .chip.own svg{width:14px;height:14px}
+  .own-input{display:flex;gap:8px;margin-top:4px}
+  .own-input[hidden]{display:none}
+  .own-input input{height:40px;font-size:15px}
+
+  .group + .group{margin-top:18px}
+  .group h3{font-size:13px;font-weight:500;color:var(--ink-2);margin:0 0 8px}
+  .from-roaster{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2);margin:-6px 0 16px}
+  .from-roaster .dot{width:6px;height:6px;border-radius:50%;background:var(--c);flex:none}
+
+  /* Score */
+  .score-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px}
+  .score-big{font-size:72px;font-weight:600;letter-spacing:-0.04em;line-height:.8;color:var(--c)}
+  .score-big small{font-size:20px;color:var(--ink-3);letter-spacing:0;font-weight:500;margin-left:4px}
+  .score-big.empty{color:var(--line)}
+  .score-word{font-size:15px;color:var(--ink-2);text-align:right}
+  .scale{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+  .scale button{all:unset;box-sizing:border-box;cursor:pointer;height:52px;border-radius:8px;border:1px solid var(--rule);display:grid;place-items:center;font-size:17px;font-weight:500;transition:background-color .15s ease-out,border-color .15s ease-out,color .15s ease-out}
+  .scale button:hover{border-color:var(--ink-3)}
+  .scale button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .scale button.on{background:var(--c-wash);border-color:var(--c)}
+  .scale button[aria-checked=true]{background:var(--c);border-color:var(--c);color:#fff}
+
+  /* Profile sliders as 5-step rows */
+  .profile{display:flex;flex-direction:column;border-top:1px solid var(--ink)}
+  .prow{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+  .prow > span{font-size:15px;font-weight:500}
+  .steps{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+  .steps button{all:unset;box-sizing:border-box;cursor:pointer;height:32px;border-radius:6px;background:var(--wash);transition:background-color .15s ease-out}
+  .steps button:hover{background:var(--line)}
+  .steps button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .steps button.on{background:var(--c)}
+  .ends{grid-column:2;display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3);margin-top:-6px}
+
+  /* Footer action */
+  .submit-bar{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:12px 20px calc(12px + env(safe-area-inset-bottom))}
+  .submit-bar .in{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:16px}
+  .progress{flex:1;font-size:14px;color:var(--ink-2)}
+  .progress b{color:var(--ink);font-weight:500}
+  .btn{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 22px;border-radius:10px;font-size:16px;font-weight:500;cursor:pointer;background:var(--blue);color:#fff;transition:background-color .15s ease-out}
+  .btn:hover{background:var(--blue-press)}
+  .btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .btn.line{background:#fff;color:var(--ink);border:1px solid var(--rule)}
+  .btn.line:hover{border-color:var(--ink-3);background:#fff}
+  .btn svg{width:16px;height:16px}
+  .error{color:var(--warn);font-size:14px;margin:10px 0 0}
+  .error[hidden]{display:none}
+
+  /* Done */
+  .done{padding-top:8px}
+  .done[hidden]{display:none}
+  .done h2{font-size:28px;letter-spacing:-0.02em;margin:0 0 8px}
+  .summary{border-top:1px solid var(--ink);margin-top:20px}
+  .sum-head{display:grid;grid-template-columns:auto 1fr;gap:2px 16px;align-items:end;padding:16px 0;border-bottom:1px solid var(--line)}
+  .sum-head .s{font-size:64px;font-weight:600;letter-spacing:-0.04em;line-height:.8;color:var(--c);grid-row:span 2}
+  .sum-head b{font-size:18px;font-weight:600}
+  .sum-head span{font-size:14px;color:var(--ink-2)}
+  .sum-row{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px;line-height:1.4}
+  .sum-row > span:first-child{color:var(--ink-2)}
+  .done-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .note{font-size:14px;color:var(--ink-2);line-height:1.5;margin:20px 0 0;max-width:56ch}
+
+  .toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,12px);background:var(--ink);color:#fff;font-size:14px;padding:10px 16px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s ease-out,transform .2s ease-out;z-index:5}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+
+  @media (max-width:520px){
+    .coffee .n{font-size:84px}
+    .coffee h1{font-size:28px}
+    .scale{grid-template-columns:repeat(5,1fr)}
+    .prow{grid-template-columns:84px 1fr}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="mark" href="../">Coffee exchange</a>
+  <a href="../" id="back-link">The record</a>
+</header>
+
+<main>
+  <form id="form" novalidate>
+    <div class="coffee" id="coffee-head">
+      <span class="n" id="c-num">00</span>
+      <h1 id="c-name">Loading…</h1>
+      <p id="c-roaster"></p>
+      <label class="switch">Rate a different coffee
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+        <select id="c-select" aria-label="Choose the coffee to rate"></select>
+      </label>
+    </div>
+
+    <section>
+      <h2>Who's tasting<span class="req">Required</span></h2>
+      <p class="hint">Saved on this phone, so you only type it once.</p>
+      <div class="stack">
+        <label class="field">Your name<input type="text" id="by" autocomplete="given-name" placeholder="First name"></label>
+        <div class="seg" id="city" role="group" aria-label="Your city"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Your score<span class="req">Required</span></h2>
+      <p class="hint">Out of 10, overall. Go with your gut.</p>
+      <div class="score-top"><span class="score-big empty" id="score-big">–<small>/10</small></span><span class="score-word" id="score-word">Tap a number</span></div>
+      <div class="scale" id="scale" role="radiogroup" aria-label="Score out of 10"></div>
+    </section>
+
+    <section>
+      <h2>What you tasted</h2>
+      <p class="hint">Tap everything you picked up. No wrong answers.</p>
+      <p class="from-roaster" id="from-roaster" hidden><span class="dot"></span><span></span></p>
+      <div id="notes"></div>
+    </section>
+
+    <section>
+      <h2>How it felt</h2>
+      <p class="hint">Tap a step on each line, or skip any you're unsure of.</p>
+      <div class="profile" id="profile"></div>
+    </section>
+
+    <section>
+      <h2>How you brewed it</h2>
+      <div class="stack">
+        <div class="chips" id="method" role="group" aria-label="Brew method"></div>
+        <label class="field">Recipe (optional)<input type="text" id="recipe" placeholder="e.g. 18 g in, 36 g out, 28 s"></label>
+      </div>
+    </section>
+
+    <section>
+      <h2>Would you buy a bag?</h2>
+      <div class="seg" id="again" role="group" aria-label="Would you buy a bag"></div>
+    </section>
+
+    <section>
+      <h2>Your notes</h2>
+      <p class="hint">Anything else: how it changed as it cooled, with milk, what it reminded you of.</p>
+      <textarea id="text" aria-label="Your notes" placeholder="Write as much or as little as you like"></textarea>
+    </section>
+  </form>
+
+  <section class="done" id="done" hidden aria-live="polite"></section>
+</main>
+
+<div class="submit-bar" id="submit-bar">
+  <div class="in">
+    <span class="progress" id="progress"></span>
+    <button type="button" class="btn" id="submit">Save review</button>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+const store = {
+  get(k){ try { return JSON.parse(localStorage.getItem('cx-rate:'+k)); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem('cx-rate:'+k, JSON.stringify(v)); } catch(e){} }
+};
+const TICK = '<svg class="tick" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>';
+const PLUS = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>';
+
+const CITIES = ['Cincinnati','New York','London','Barcelona'];
+const WORDS = ['','Not for me','Not for me','Not for me','Fine','Fine','Good','Really good','Really good','Exceptional','Exceptional'];
+const NOTES = [
+  ['Fruity',   ['Berry','Cherry','Citrus','Stone fruit','Apple','Tropical','Dried fruit','Grape']],
+  ['Sweet',    ['Chocolate','Cocoa','Caramel','Toffee','Honey','Brown sugar','Vanilla','Molasses']],
+  ['Nutty',    ['Almond','Hazelnut','Peanut','Marzipan']],
+  ['Floral',   ['Jasmine','Black tea','Rose','Lavender']],
+  ['Spice and roast', ['Cinnamon','Clove','Pepper','Toast','Smoky','Tobacco']],
+  ['Other',    ['Earthy','Herbal','Winey','Savoury']],
+  ['Texture',  ['Creamy','Juicy','Silky','Syrupy','Clean','Dry']]
+];
+const PROFILE = [
+  ['acidity','Acidity','Flat','Bright'],
+  ['body','Body','Light','Heavy'],
+  ['sweetness','Sweetness','Low','High'],
+  ['bitterness','Bitterness','Low','High'],
+  ['finish','Finish','Short','Long']
+];
+const METHODS = ['Espresso','Milk drink','Pour-over','AeroPress','French press','Moka pot','Drip machine','Cold brew'];
+const AGAIN = [['yes','Yes'],['maybe','Maybe'],['no','No']];
+
+let coffees = [], coffee = null;
+let r = blank();
+function blank(){ const me = store.get('me') || {}; return {by: me.by || '', city: me.city || '', score: null, tasting: [], profile: {}, method: [], recipe: '', again: '', notes: ''}; }
+
+/* ---------- data ---------- */
+async function load(){
+  if (window.CX_DATA) { coffees = window.CX_DATA.coffees; return; }
+  try { coffees = (await (await fetch('../data/coffees.json', {cache:'no-cache'})).json()).coffees || []; } catch(e){ coffees = []; }
+}
+
+/* ---------- colour helpers: chip tint from the coffee colour ---------- */
+function setAccent(hex){
+  const n = parseInt(hex.replace('#',''),16), rgb = [n>>16&255, n>>8&255, n&255];
+  document.documentElement.style.setProperty('--c', hex);
+  document.documentElement.style.setProperty('--c-wash', `rgba(${rgb.join(',')},.1)`);
+}
+
+/* ---------- render ---------- */
+function pickCoffee(number){
+  coffee = coffees.find(c => c.number === number) || coffees[coffees.length-1];
+  if (!coffee) { $('c-name').textContent = 'No coffees yet'; return; }
+  setAccent(coffee.colour || '#0000FF');
+  $('c-num').textContent = coffee.number;
+  $('c-name').textContent = coffee.name;
+  $('c-roaster').textContent = [coffee.roaster, coffee.roasterCity].filter(Boolean).join(' · ');
+  $('c-select').value = coffee.number;
+  $('back-link').href = '../#coffee-' + coffee.number;
+  document.title = `Rate ${coffee.number} ${coffee.name} · Coffee exchange`;
+  const fr = $('from-roaster'), tn = coffee.tastingNotes || [];
+  fr.hidden = !tn.length; fr.lastElementChild.textContent = `The roaster says ${tn.join(', ').toLowerCase()}. Those are marked with a dot.`;
+  try { history.replaceState(null, '', '?coffee=' + coffee.number); } catch(e){}
+  // pick up an unfinished or saved review for this coffee
+  const saved = store.get('review:' + coffee.number);
+  r = saved ? {...blank(), ...saved} : blank();
+  renderAll();
+}
+function renderAll(){
+  $('by').value = r.by;
+  renderSeg('city', CITIES.map(c => [c,c]), () => r.city, v => { r.city = v; remember(); });
+  renderScale(); renderNotes(); renderProfile(); renderMethods();
+  $('recipe').value = r.recipe;
+  renderSeg('again', AGAIN, () => r.again, v => r.again = v);
+  $('text').value = r.notes;
+  progress();
+}
+function renderSeg(id, opts, get, set){
+  const box = $(id);
+  box.innerHTML = opts.map(([v,l]) => `<button type="button" data-v="${esc(v)}" aria-pressed="${get() === v}">${esc(l)}</button>`).join('');
+  box.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    set(get() === b.dataset.v ? '' : b.dataset.v);
+    box.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', get() === x.dataset.v));
+    changed();
+  }));
+}
+function renderScale(){
+  const box = $('scale');
+  box.innerHTML = Array.from({length:10}, (_,i) => `<button type="button" role="radio" aria-checked="${r.score === i+1}" aria-label="${i+1} out of 10" tabindex="${(r.score ? r.score === i+1 : i === 0) ? 0 : -1}">${i+1}</button>`).join('');
+  const btns = [...box.children];
+  const set = v => {
+    r.score = v; changed();
+    btns.forEach((b,i) => { b.setAttribute('aria-checked', v === i+1); b.classList.toggle('on', v && i+1 < v); b.tabIndex = v === i+1 ? 0 : -1; });
+    const big = $('score-big'); big.classList.toggle('empty', !v); big.firstChild.textContent = v || '–';
+    $('score-word').textContent = v ? WORDS[v] : 'Tap a number';
+  };
+  btns.forEach((b,i) => {
+    b.addEventListener('click', () => set(i+1));
+    b.addEventListener('keydown', e => {
+      const d = {ArrowRight:1, ArrowUp:1, ArrowLeft:-1, ArrowDown:-1}[e.key]; if (!d) return;
+      e.preventDefault(); const v = Math.min(10, Math.max(1, (r.score || 0) + d)); set(v); btns[v-1].focus();
+    });
+  });
+  set(r.score);
+}
+function renderNotes(){
+  const roaster = (coffee.tastingNotes || []).map(s => s.toLowerCase());
+  const known = new Set(NOTES.flatMap(g => g[1]));
+  const own = r.tasting.filter(t => !known.has(t));
+  const chip = t => `<button type="button" class="chip" data-t="${esc(t)}" aria-pressed="${r.tasting.includes(t)}">${TICK}${esc(t)}${roaster.includes(t.toLowerCase()) ? '<span class="dot" aria-label="(the roaster lists this)"></span>' : ''}</button>`;
+  $('notes').innerHTML = NOTES.map(([g, list]) => `<div class="group"><h3>${g}</h3><div class="chips">${list.map(chip).join('')}</div></div>`).join('') +
+    `<div class="group"><h3>Your own</h3><div class="chips" id="own-chips">${own.map(chip).join('')}<button type="button" class="chip own" id="own-add">${PLUS}Add a note</button></div>
+     <div class="own-input" id="own-row" hidden><input type="text" id="own-text" placeholder="e.g. blood orange" aria-label="Your own tasting note"><button type="button" class="btn line" id="own-ok" style="height:40px">Add</button></div></div>`;
+  $('notes').querySelectorAll('.chip[data-t]').forEach(wireChip);
+  $('own-add').addEventListener('click', () => { $('own-row').hidden = false; $('own-text').focus(); });
+  const addOwn = () => {
+    const t = $('own-text').value.trim(); if (!t) return;
+    const label = t[0].toUpperCase() + t.slice(1);
+    if (!r.tasting.includes(label)) r.tasting.push(label);
+    renderNotes(); changed(); $('own-add').focus();
+  };
+  $('own-ok').addEventListener('click', addOwn);
+  $('own-text').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); addOwn(); } });
+}
+function wireChip(b){
+  b.addEventListener('click', () => {
+    const t = b.dataset.t, on = r.tasting.includes(t);
+    r.tasting = on ? r.tasting.filter(x => x !== t) : [...r.tasting, t];
+    b.setAttribute('aria-pressed', !on); changed();
+  });
+}
+function renderProfile(){
+  $('profile').innerHTML = PROFILE.map(([k,l,lo,hi]) => `<div class="prow"><span id="pl-${k}">${l}</span>
+    <div class="steps" role="radiogroup" aria-labelledby="pl-${k}">${[1,2,3,4,5].map(v => `<button type="button" role="radio" data-k="${k}" data-v="${v}" aria-checked="${r.profile[k] === v}" aria-label="${l} ${v} of 5, ${v===1?lo:v===5?hi:''}"></button>`).join('')}</div>
+    <div class="ends"><span>${lo}</span><span>${hi}</span></div></div>`).join('');
+  const paint = k => $('profile').querySelectorAll(`[data-k="${k}"]`).forEach(b => { const v = +b.dataset.v; b.classList.toggle('on', r.profile[k] >= v); b.setAttribute('aria-checked', r.profile[k] === v); });
+  $('profile').querySelectorAll('.steps button').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.k, v = +b.dataset.v;
+    if (r.profile[k] === v) delete r.profile[k]; else r.profile[k] = v;
+    paint(k); changed();
+  }));
+  PROFILE.forEach(([k]) => paint(k));
+}
+function renderMethods(){
+  $('method').innerHTML = METHODS.map(m => `<button type="button" class="chip" data-m="${esc(m)}" aria-pressed="${r.method.includes(m)}">${TICK}${esc(m)}</button>`).join('');
+  $('method').querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => {
+    const m = b.dataset.m, on = r.method.includes(m);
+    r.method = on ? r.method.filter(x => x !== m) : [...r.method, m];
+    b.setAttribute('aria-pressed', !on); changed();
+  }));
+}
+
+/* ---------- state ---------- */
+function remember(){ store.set('me', {by: r.by, city: r.city}); }
+let saveT;
+function changed(){ progress(); $('err').hidden = true; clearTimeout(saveT); saveT = setTimeout(() => coffee && store.set('review:' + coffee.number, r), 250); }
+function progress(){
+  const parts = [r.score ? `<b>${r.score}/10</b>` : null, r.tasting.length ? `${r.tasting.length} note${r.tasting.length>1?'s':''}` : null, r.method.length ? r.method[0] + (r.method.length>1 ? ' +' + (r.method.length-1) : '') : null].filter(Boolean);
+  $('progress').innerHTML = parts.length ? parts.join(' · ') : 'Score it to save';
+}
+['by','recipe','text'].forEach(id => $(id).addEventListener('input', e => {
+  const k = {by:'by', recipe:'recipe', text:'notes'}[id]; r[k] = e.target.value;
+  if (id === 'by') remember();
+  changed();
+}));
+$('c-select').addEventListener('change', e => { pickCoffee(e.target.value); scrollTo({top:0}); });
+
+/* ---------- submit ---------- */
+const err = document.createElement('p'); err.className = 'error'; err.id = 'err'; err.hidden = true; err.setAttribute('role','alert');
+$('submit-bar').querySelector('.in').after(err);
+err.style.cssText = 'max-width:720px;margin:8px auto 0';
+
+function entry(){
+  return {number: coffee.number, by: r.by.trim(), city: r.city || null, date: new Date().toISOString().slice(0,10),
+    score: r.score, tasting: r.tasting, profile: r.profile, method: r.method, recipe: r.recipe.trim(), again: r.again || null, notes: r.notes.trim()};
+}
+function chatText(e){
+  const p = PROFILE.filter(([k]) => e.profile[k]).map(([k,l]) => `${l} ${e.profile[k]}/5`).join(', ');
+  return [`${coffee.number} ${coffee.name} (${coffee.roaster}): ${e.score}/10`,
+    `From ${e.by}${e.city ? ', ' + e.city : ''}`,
+    e.tasting.length ? `Tasted: ${e.tasting.join(', ')}` : '',
+    p ? `Profile: ${p}` : '',
+    e.method.length ? `Brewed: ${e.method.join(', ')}${e.recipe ? ' (' + e.recipe + ')' : ''}` : '',
+    e.again ? `Buy a bag: ${({yes:'Yes',maybe:'Maybe',no:'No'})[e.again]}` : '',
+    e.notes ? `\n${e.notes}` : ''].filter(Boolean).join('\n');
+}
+$('submit').addEventListener('click', () => {
+  const missing = [!r.by.trim() && 'your name', !r.score && 'a score'].filter(Boolean);
+  if (missing.length){
+    err.textContent = `Add ${missing.join(' and ')} to save.`; err.hidden = false;
+    (!r.by.trim() ? $('by') : $('scale').firstElementChild).focus();
+    return;
+  }
+  const e = entry();
+  store.set('review:' + coffee.number, r);
+  showDone(e);
+});
+function showDone(e){
+  const p = PROFILE.filter(([k]) => e.profile[k]).map(([k,l]) => `${l} ${e.profile[k]}/5`).join(' · ');
+  $('done').innerHTML = `
+    <h2>Thanks, ${esc(e.by)}.</h2>
+    <p class="hint">Here's your review of ${esc(coffee.number)} ${esc(coffee.name)}.</p>
+    <div class="summary">
+      <div class="sum-head"><span class="s">${e.score}</span><b>${esc(coffee.name)}</b><span>${esc(WORDS[e.score])} · ${esc(e.by)}${e.city ? ', ' + esc(e.city) : ''}</span></div>
+      ${e.tasting.length ? `<div class="sum-row"><span>Tasted</span><span>${esc(e.tasting.join(', '))}</span></div>` : ''}
+      ${p ? `<div class="sum-row"><span>Profile</span><span>${esc(p)}</span></div>` : ''}
+      ${e.method.length ? `<div class="sum-row"><span>Brewed</span><span>${esc(e.method.join(', '))}${e.recipe ? ' · ' + esc(e.recipe) : ''}</span></div>` : ''}
+      ${e.again ? `<div class="sum-row"><span>Buy a bag</span><span>${({yes:'Yes',maybe:'Maybe',no:'No'})[e.again]}</span></div>` : ''}
+      ${e.notes ? `<div class="sum-row"><span>Notes</span><span>${esc(e.notes).replace(/\n/g,'<br>')}</span></div>` : ''}
+    </div>
+    <div class="done-actions">
+      <button type="button" class="btn" id="copy-chat">Copy for the group chat</button>
+      <button type="button" class="btn line" id="edit">Edit review</button>
+    </div>
+    <p class="note">Reviews will save straight to the site once ratings storage is set up. Until then, paste this in the group chat and it gets added to the record.</p>
+    <p class="note"><button type="button" class="btn line" id="copy-json" style="height:36px;font-size:14px;padding:0 12px">Copy as data</button> for <code style="font-size:12px">data/reviews.json</code></p>`;
+  $('form').hidden = true; $('submit-bar').hidden = true; $('done').hidden = false; scrollTo({top:0});
+  $('copy-chat').addEventListener('click', () => copy(chatText(e), 'Copied. Paste it in the group chat'));
+  $('copy-json').addEventListener('click', () => copy(JSON.stringify(e, null, 2), 'Copied'));
+  $('edit').addEventListener('click', () => { $('form').hidden = false; $('submit-bar').hidden = false; $('done').hidden = true; });
+}
+async function copy(text, msg){
+  try { await navigator.clipboard.writeText(text); toast(msg); }
+  catch(e){ const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); toast(msg); } catch(_){ toast('Could not copy'); } t.remove(); }
+}
+function toast(m){ const t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 2200); }
+
+/* ---------- start ---------- */
+load().then(() => {
+  $('c-select').innerHTML = coffees.map(c => `<option value="${esc(c.number)}">${esc(c.number)} ${esc(c.name)}</option>`).join('');
+  const want = new URLSearchParams(location.search).get('coffee') || (location.hash.match(/^#coffee-(\d+)$/) || [])[1];
+  pickCoffee(want);
+});
+})();
+</script>
+</body>
+</html>
