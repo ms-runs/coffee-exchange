@@ -11,7 +11,7 @@
     --blue:#0000FF; --ink:#14171F; --ink-2:#4E5566; --rule:#C9CED8; --bg:#FFFFFF;
     --font:"Helvetica Neue",Helvetica,"TeX Gyre Heros",Arial,sans-serif; --on-blue:#FFFFFF;
   }
-  :root[data-theme=dark]{--blue:#93A3FF; --ink:#FFFFFF; --ink-2:#B7BFCF; --rule:#3A4560; --bg:#141B2A; --on-blue:#141B2A}
+  :root[data-theme=dark]{--blue:#FFFFFF; --ink:#FFFFFF; --ink-2:#B7BFCF; --rule:#3A4560; --bg:#141B2A; --on-blue:#141B2A}
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased}
   body.transparent{--bg:transparent}
@@ -73,7 +73,7 @@ const GEO={"dots":[-691,-550,-665,-550,-730,-535,-718,-520,-693,-520,-753,-505,-
   const tone = h => window.cxTheme ? cxTheme.tone(h) : h;
   function palette(){
     const dark = window.cxTheme && cxTheme.get() === 'dark';
-    BLUE = BLUE_SET ? tone(BLUE_SET) : (dark ? '#93A3FF' : '#0000FF');
+    BLUE = BLUE_SET ? tone(BLUE_SET) : (dark ? '#FFFFFF' : '#0000FF');
     INK = dark ? '#FFFFFF' : '#14171F'; INK2 = dark ? '#B7BFCF' : '#4E5566';
     HALO = dark ? 'rgba(20,27,42,.9)' : 'rgba(255,255,255,.92)';
     PAPER = dark ? '#141B2A' : '#FFFFFF'; ON = PAPER;
