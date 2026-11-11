@@ -1,0 +1,15 @@
+{
+  "name": "coffee-exchange",
+  "private": true,
+  "type": "module",
+  "description": "Coffee swap between friends in Cincinnati, New York, London and Barcelona: cards, ratings and globe.",
+  "scripts": {
+    "serve": "npx --yes serve .",
+    "land-dots": "node tools/build-land-dots.mjs"
+  },
+  "devDependencies": {
+    "d3-geo": "^3.1.1",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
+  }
+}

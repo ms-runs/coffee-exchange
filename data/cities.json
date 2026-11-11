@@ -1,0 +1,8 @@
+{
+  "cities": [
+    {"id": "cincinnati", "name": "Cincinnati", "lon": -84.51, "lat": 39.10, "tz": "America/New_York"},
+    {"id": "nyc",        "name": "New York",   "lon": -74.01, "lat": 40.71, "tz": "America/New_York"},
+    {"id": "london",     "name": "London",     "lon": -0.13,  "lat": 51.51, "tz": "Europe/London"},
+    {"id": "barcelona",  "name": "Barcelona",  "lon": 2.17,   "lat": 41.39, "tz": "Europe/Madrid"}
+  ]
+}
