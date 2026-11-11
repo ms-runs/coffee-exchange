@@ -1,0 +1,9 @@
+name = "coffee-exchange"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "coffee-exchange"
+database_id = "6da27bf7-40e1-4472-a671-4b360dc148a4"
+migrations_dir = "migrations"

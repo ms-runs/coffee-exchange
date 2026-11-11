@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <script src="../assets/theme.js"></script>
+<script src="../assets/config.js"></script>
 <title>Rate a coffee · Coffee exchange</title>
 <style>
   :root{
@@ -430,12 +431,48 @@ $('submit').addEventListener('click', () => {
   }
   const e = entry();
   store.set('review:' + coffee.number, r);
-  showDone(e);
+  if (!API) { showDone(e, false); return; }
+  saveOnline(e);
 });
-function showDone(e){
+const API = (window.CX_API || '').replace(/\/$/,'');
+async function saveOnline(e){
+  const btn = $('submit'); btn.disabled = true; btn.textContent = 'Saving…'; btn.style.opacity = '.7';
+  try {
+    const code = store.get('code') || '';
+    const res = await fetch(API + '/api/reviews', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...e, code})});
+    const out = await res.json().catch(() => ({}));
+    if (res.status === 403 && out.code === 'group_code'){
+      const c = await askCode(code ? 'That code didn\'t work. Try again.' : 'Enter the group code to save. You only need it once on this phone.');
+      if (c){ store.set('code', c); return saveOnline(e); }
+      throw new Error('Saving needs the group code.');
+    }
+    if (!res.ok) throw new Error(out.error || 'Could not save right now.');
+    r.saved = true; store.set('review:' + coffee.number, r);
+    showDone(e, true);
+  } catch(x){
+    err.textContent = (x.message || 'Could not save right now.') + ' Your review is kept on this phone; try again, or copy it below.'; err.hidden = false;
+    showCopyFallback(e);
+  } finally { btn.disabled = false; btn.textContent = 'Save review'; btn.style.opacity = ''; }
+}
+function askCode(msg){
+  return new Promise(res => {
+    err.innerHTML = `${esc(msg)} <span style="display:inline-flex;gap:8px;margin-top:8px;width:100%"><input type="text" id="code-in" aria-label="Group code" style="height:40px;font-size:15px"><button type="button" class="btn" id="code-ok" style="height:40px">Save</button></span>`;
+    err.hidden = false; $('code-in').focus();
+    const done = () => { const v = $('code-in').value.trim(); err.hidden = true; res(v); };
+    $('code-ok').addEventListener('click', done);
+    $('code-in').addEventListener('keydown', ev => { if (ev.key === 'Enter') done(); });
+  });
+}
+function showCopyFallback(e){
+  if ($('copy-fallback')) return;
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn line'; b.id = 'copy-fallback'; b.textContent = 'Copy for the group chat'; b.style.cssText = 'height:36px;font-size:14px;margin-left:8px';
+  b.addEventListener('click', () => copy(chatText(entry()), 'Copied. Paste it in the group chat'));
+  err.appendChild(b);
+}
+function showDone(e, online){
   const p = PROFILE.filter(([k]) => e.profile[k]).map(([k,l]) => `${l} ${e.profile[k]}/5`).join(' · ');
   $('done').innerHTML = `
-    <h2>Thanks, ${esc(e.by)}.</h2>
+    <h2>${online ? 'Saved' : 'Thanks'}, ${esc(e.by)}.</h2>
     <p class="hint">Here's your review of ${esc(coffee.number)} ${esc(coffee.name)}.</p>
     <div class="summary">
       <div class="sum-head"><span class="s">${e.score}</span><b>${esc(coffee.name)}</b><span>${esc(WORDS[e.score])} · ${esc(e.by)}${e.city ? ', ' + esc(e.city) : ''}</span></div>
@@ -449,11 +486,13 @@ function showDone(e){
       <button type="button" class="btn" id="copy-chat">Copy for the group chat</button>
       <button type="button" class="btn line" id="edit">Edit review</button>
     </div>
-    <p class="note">Reviews will save straight to the site once ratings storage is set up. Until then, paste this in the group chat and it gets added to the record.</p>
-    <p class="note"><button type="button" class="btn line" id="copy-json" style="height:36px;font-size:14px;padding:0 12px">Copy as data</button> for <code style="font-size:12px">data/reviews.json</code></p>`;
+    ${online
+      ? `<p class="note">Saved to the record. Change your mind? Edit and save again; it replaces this one.</p><p class="note"><a href="../#coffee-${esc(coffee.number)}">See ${esc(coffee.number)} on the site</a></p>`
+      : `<p class="note">Reviews will save straight to the site once ratings storage is set up. Until then, paste this in the group chat and it gets added to the record.</p>
+    <p class="note"><button type="button" class="btn line" id="copy-json" style="height:36px;font-size:14px;padding:0 12px">Copy as data</button> for <code style="font-size:12px">data/reviews.json</code></p>`}`;
   $('form').hidden = true; $('submit-bar').hidden = true; $('done').hidden = false; scrollTo({top:0});
   $('copy-chat').addEventListener('click', () => copy(chatText(e), 'Copied. Paste it in the group chat'));
-  $('copy-json').addEventListener('click', () => copy(JSON.stringify(e, null, 2), 'Copied'));
+  if ($('copy-json')) $('copy-json').addEventListener('click', () => copy(JSON.stringify(e, null, 2), 'Copied'));
   $('edit').addEventListener('click', () => { $('form').hidden = false; $('submit-bar').hidden = false; $('done').hidden = true; });
 }
 async function copy(text, msg){

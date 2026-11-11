@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <script src="assets/theme.js"></script>
+<script src="assets/config.js"></script>
 <title>Coffee exchange</title>
 <style>
   :root{
@@ -117,7 +118,8 @@
   .score b{font-size:28px;font-weight:600;color:var(--ink);letter-spacing:-0.02em;margin-right:4px}
   .rv-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
   .rv{display:grid;grid-template-columns:56px 1fr;gap:4px 16px;padding:16px 0;border-bottom:1px solid var(--line)}
-  .rv .s{font-size:28px;font-weight:600;letter-spacing:-0.02em;line-height:1;grid-row:span 3}
+  .rv .s{font-size:28px;font-weight:600;letter-spacing:-0.02em;line-height:1;grid-row:span 4}
+  .rv > :not(.s){grid-column:2}
   .rv .who{font-size:15px;font-weight:500}
   .rv .who span{font-weight:400;color:var(--ink-2)}
   .rv .meta{font-size:14px;color:var(--ink-2)}
@@ -230,7 +232,9 @@ let coffees = [], reviews = [], scale = 10, cities = 4;
 async function load(){
   if (!DATA){
     const get = p => fetch(p, {cache:'no-cache'}).then(r => r.ok ? r.json() : null).catch(() => null);
-    const [c, r] = await Promise.all([get('data/coffees.json'), get('data/reviews.json')]);
+    const api = (window.CX_API || '').replace(/\/$/,'');
+    const [c, r0] = await Promise.all([get('data/coffees.json'), api ? get(api + '/api/reviews') : null]);
+    const r = r0 || await get('data/reviews.json');
     DATA = {coffees: c?.coffees || [], reviews: r?.reviews || [], scale: r?.scale || 10};
   }
   coffees = DATA.coffees; reviews = DATA.reviews || []; scale = DATA.scale || 10;

@@ -16,4 +16,4 @@ Review shape in `data/reviews.json`:
  "method":["Moka pot"],"recipe":"15 g, medium heat","again":"yes","notes":"Sweeter as it cooled."}
 ```
 
-Storage: for now reviews are pasted into the group chat and added to `data/reviews.json`. Next: Cloudflare D1 behind the Worker so Save writes straight to the site.
+Storage: Save posts to the Worker (`worker/`), which keeps reviews in Cloudflare D1; the site reads them back. Until `assets/config.js` points at the Worker, the page falls back to copying the review for the group chat.
