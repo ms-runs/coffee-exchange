@@ -7,14 +7,38 @@
       "roasterCity": "Cincinnati, OH",
       "pickedBy": null,
       "colour": "#AE8803",
-      "details": [
-        ["Origin", "Brazil, Ethiopia, Guatemala"],
-        ["Process", "Washed and natural"],
-        ["Roast", "Medium"],
-        ["Style", "Espresso blend"],
-        ["Trade", "Direct trade"]
+      "origins": [
+        "Brazil",
+        "Ethiopia",
+        "Guatemala"
       ],
-      "tastingNotes": ["Cherry", "toffee", "chocolate"],
+      "details": [
+        [
+          "Origin",
+          "Brazil, Ethiopia, Guatemala"
+        ],
+        [
+          "Process",
+          "Washed and natural"
+        ],
+        [
+          "Roast",
+          "Medium"
+        ],
+        [
+          "Style",
+          "Espresso blend"
+        ],
+        [
+          "Trade",
+          "Direct trade"
+        ]
+      ],
+      "tastingNotes": [
+        "Cherry",
+        "toffee",
+        "chocolate"
+      ],
       "bagImage": null,
       "link": "https://www.seattlecoffeegear.com/products/deeper-roots-coffee-alchemy-espresso"
     },
@@ -25,13 +49,32 @@
       "roasterCity": "Ipswich, MA",
       "pickedBy": null,
       "colour": "#008CFF",
-      "details": [
-        ["Origin", "Colombia"],
-        ["Blend", "60% washed Colombia / 40% natural Colombia, Willow"],
-        ["Roast", "Light–medium"],
-        ["Style", "Espresso or drip"]
+      "origins": [
+        "Colombia"
       ],
-      "tastingNotes": ["Berry", "chocolate", "creamy"],
+      "details": [
+        [
+          "Origin",
+          "Colombia"
+        ],
+        [
+          "Blend",
+          "60% washed Colombia / 40% natural Colombia, Willow"
+        ],
+        [
+          "Roast",
+          "Light–medium"
+        ],
+        [
+          "Style",
+          "Espresso or drip"
+        ]
+      ],
+      "tastingNotes": [
+        "Berry",
+        "chocolate",
+        "creamy"
+      ],
       "bagImage": null,
       "link": "https://littlewolf.coffee/products/companion-blend-subscription"
     }

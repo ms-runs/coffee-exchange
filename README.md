@@ -8,7 +8,7 @@ Live: https://ms-runs.github.io/coffee-exchange/ (embedded on migsousa.com with 
 
 | Folder | What | Status |
 | --- | --- | --- |
-| [`globe/`](globe/) | Turning dot globe with cup pins on the four cities, swap-ring routes, local times | First version |
+| [`globe/`](globe/) | Turning dot globe. **Our cities**: cup pins, swap-ring routes, local times. **Coffees we've tried**: origin countries lit in each coffee's number colour | First version |
 | [`cards/`](cards/) | A6 card maker, Swiss grid, jsPDF export | Next |
 | [`worker/`](worker/) | Cloudflare Worker: roaster link → coffee fields | Planned |
 | [`ratings/`](ratings/) | Ratings grid and review forms | Planned |
@@ -23,7 +23,9 @@ Vanilla JS and static files on GitHub Pages. No build step for the pages. Free C
 
 ## Globe embed options
 
-`globe/index.html` takes query options: `?bg=transparent`, `?controls=0`, `?caption=0`, `?color=0000FF`.
+`globe/index.html` takes query options: `?bg=transparent`, `?controls=0`, `?caption=0`, `?color=0000FF`, `?mode=coffees` (or `#coffees`).
+
+The coffees view reads `data/coffees.json` when hosted on GitHub Pages. Each coffee's `origins` are country names as Natural Earth spells them (e.g. `Brazil`, `Ethiopia`, `Colombia`); a country shared by several coffees shows all their numbers and takes the latest coffee's colour.
 
 ```html
 <iframe src="https://ms-runs.github.io/coffee-exchange/globe/?bg=transparent"
@@ -35,7 +37,7 @@ Vanilla JS and static files on GitHub Pages. No build step for the pages. Free C
 ```sh
 npm install          # only needed for tools/
 npm run serve        # static server at localhost:3000
-npm run land-dots    # rebuild the globe's land dots from Natural Earth (world-atlas)
+npm run land-dots    # rebuild land dots + country lookup (writes tools/land-dots.json, ~2 min)
 ```
 
 ## Design
