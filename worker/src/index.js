@@ -4,7 +4,9 @@
 //   GET  /api/reviews.csv        → CSV, one row per review     (for =IMPORTDATA in Google Sheets)
 //   POST /api/reviews            → save a review; one per person per coffee, saving again updates it
 //
-// Optional secret GROUP_CODE: when set, POST needs the same code (body.code or X-Group-Code header).
+// Group code: POST needs the group's code (body.code or X-Group-Code header). The code is checked against a
+// SHA-256 hash in the D1 settings table (key group_code_sha256), so it can be changed without redeploying;
+// a GROUP_CODE secret, if set, takes priority. Codes are compared trimmed and lower-case.
 
 const ALLOWED_ORIGINS = [
   'https://ms-runs.github.io',
@@ -41,9 +43,9 @@ export default {
         let body;
         try { body = await request.json(); } catch { return json({ error: 'Send the review as JSON.' }, 400, cors); }
 
-        if (env.GROUP_CODE) {
-          const code = String(body.code || request.headers.get('X-Group-Code') || '').trim();
-          if (code !== env.GROUP_CODE) return json({ error: 'That group code is not right.', code: 'group_code' }, 403, cors);
+        const code = String(body.code || request.headers.get('X-Group-Code') || '');
+        if (!(await codeOk(env, code))) {
+          return json({ error: code ? 'That group code is not right.' : 'Enter the group code to save.', code: 'group_code' }, 403, cors);
         }
 
         const r = validate(body);
@@ -64,6 +66,12 @@ export default {
         return json({ ok: true, review: saved.find(x => x.by.toLowerCase() === r.by.toLowerCase()) }, 200, cors);
       }
 
+      // lets the review page check a code before someone fills in the whole form
+      if (url.pathname === '/api/code' && request.method === 'POST') {
+        let body = {}; try { body = await request.json(); } catch {}
+        return json({ ok: await codeOk(env, String(body.code || '')) }, 200, cors);
+      }
+
       if (url.pathname === '/' || url.pathname === '/api') {
         return new Response('Coffee exchange API. GET /api/reviews, GET /api/reviews.csv, POST /api/reviews\n',
           { headers: { ...cors, 'Content-Type': 'text/plain; charset=utf-8' } });
@@ -76,6 +84,18 @@ export default {
     }
   },
 };
+
+const norm = c => String(c || '').trim().toLowerCase();
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function codeOk(env, code) {
+  if (env.GROUP_CODE) return norm(code) === norm(env.GROUP_CODE);
+  const row = await env.DB.prepare("SELECT value FROM settings WHERE key = 'group_code_sha256'").first().catch(() => null);
+  if (!row) return true;                                  // no code set: open
+  return !!code && (await sha256(norm(code))) === row.value;
+}
 
 async function listReviews(env, number) {
   const sql = `SELECT number, by_name, city, date, score, tasting, profile, method, recipe, again, notes, created_at, updated_at

@@ -63,6 +63,10 @@
   input[type=text]:hover,textarea:hover{border-color:var(--ink-3)}
   input[type=text]:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,0,255,.14)}
   .field{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--ink-2)}
+  .field[hidden]{display:none}
+  .code-msg{font-size:13px;min-height:18px}
+  .code-msg.ok{color:var(--ink-2)}
+  .code-msg.bad{color:var(--warn)}
   .stack{display:flex;flex-direction:column;gap:16px}
 
   /* Segmented + chips */
@@ -180,6 +184,7 @@
       <div class="stack">
         <label class="field">Your name<input type="text" id="by" autocomplete="given-name" placeholder="First name"></label>
         <div class="seg" id="city" role="group" aria-label="Your city"></div>
+        <label class="field" id="code-field" hidden>Group code<input type="text" id="code" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="From the group chat"><span class="code-msg" id="code-msg"></span></label>
       </div>
     </section>
 
@@ -438,14 +443,15 @@ const API = (window.CX_API || '').replace(/\/$/,'');
 async function saveOnline(e){
   const btn = $('submit'); btn.disabled = true; btn.textContent = 'Saving…'; btn.style.opacity = '.7';
   try {
-    const code = store.get('code') || '';
+    const code = ($('code').value || store.get('code') || '').trim();
     const res = await fetch(API + '/api/reviews', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...e, code})});
     const out = await res.json().catch(() => ({}));
     if (res.status === 403 && out.code === 'group_code'){
-      const c = await askCode(code ? 'That code didn\'t work. Try again.' : 'Enter the group code to save. You only need it once on this phone.');
-      if (c){ store.set('code', c); return saveOnline(e); }
-      throw new Error('Saving needs the group code.');
+      store.set('code', ''); $('code-field').hidden = false; codeMsg(code ? 'That code isn\'t right.' : 'Add the group code to save.', 'bad');
+      $('code').focus(); $('code').scrollIntoView({block:'center'});
+      throw new Error(code ? 'That group code isn\'t right.' : 'Add the group code to save.');
     }
+    if (code) store.set('code', code);
     if (!res.ok) throw new Error(out.error || 'Could not save right now.');
     r.saved = true; store.set('review:' + coffee.number, r);
     showDone(e, true);
@@ -453,15 +459,6 @@ async function saveOnline(e){
     err.textContent = (x.message || 'Could not save right now.') + ' Your review is kept on this phone; try again, or copy it below.'; err.hidden = false;
     showCopyFallback(e);
   } finally { btn.disabled = false; btn.textContent = 'Save review'; btn.style.opacity = ''; }
-}
-function askCode(msg){
-  return new Promise(res => {
-    err.innerHTML = `${esc(msg)} <span style="display:inline-flex;gap:8px;margin-top:8px;width:100%"><input type="text" id="code-in" aria-label="Group code" style="height:40px;font-size:15px"><button type="button" class="btn" id="code-ok" style="height:40px">Save</button></span>`;
-    err.hidden = false; $('code-in').focus();
-    const done = () => { const v = $('code-in').value.trim(); err.hidden = true; res(v); };
-    $('code-ok').addEventListener('click', done);
-    $('code-in').addEventListener('keydown', ev => { if (ev.key === 'Enter') done(); });
-  });
 }
 function showCopyFallback(e){
   if ($('copy-fallback')) return;
@@ -503,6 +500,25 @@ function toast(m){ const t = $('toast'); t.textContent = m; t.classList.add('on'
 
 /* ---------- start ---------- */
 if (window.cxTheme) cxTheme.onChange(() => { if (coffee) setAccent(coffee.colour || '#0000FF'); });
+// group code: shown until this phone has a working one; checked as you type
+function codeMsg(t, kind){ const m = $('code-msg'); m.textContent = t || ''; m.className = 'code-msg' + (kind ? ' ' + kind : ''); }
+if (API){
+  const saved = store.get('code');
+  $('code-field').hidden = !!saved;
+  let ct;
+  $('code').addEventListener('input', () => {
+    clearTimeout(ct); const v = $('code').value.trim(); if (!v){ codeMsg(''); return; }
+    codeMsg('Checking…');
+    ct = setTimeout(async () => {
+      try {
+        const out = await (await fetch(API + '/api/code', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({code:v})})).json();
+        if ($('code').value.trim() !== v) return;
+        if (out.ok){ store.set('code', v); codeMsg('Code works. Saved on this phone.', 'ok'); }
+        else codeMsg('That code isn\'t right.', 'bad');
+      } catch(e){ codeMsg(''); }
+    }, 400);
+  });
+}
 load().then(() => {
   $('c-select').innerHTML = coffees.map(c => `<option value="${esc(c.number)}">${esc(c.number)} ${esc(c.name)}</option>`).join('');
   const want = new URLSearchParams(location.search).get('coffee') || (location.hash.match(/^#coffee-(\d+)$/) || [])[1];
