@@ -14,7 +14,7 @@ The exact build spec for the coffee card, taken from the approved design on the 
 ## Layout, top to bottom
 
 1. **Header row:** big number top-left (about 104 px, weight 600, line-height 0.8, letter-spacing -0.04em, in the coffee's colour). Top-right: the Round lockup, 22 px tall (small cut), Atlantic blue #1A3FA0 with the disc in the coffee's colour, drawn as outlines; below it, right-aligned 13 px secondary "Picked by <name>".
-2. **Name and roaster:** coffee name 30 px weight 600; below it 15 px secondary "<Roaster> · <City, State>".
+2. **Name and roaster:** coffee name 30 px weight 600; below it 15 px secondary "<Roaster> · <City, Country>" (US roasters can use City, State).
 3. **Details table:** 1 px ink rule on top, then rows of 14 px text, label column 96 px (secondary) and value (weight 500), 7 px vertical padding, 1 px #C9CED8 rule under each row. Default rows: Origin, Process, Variety, Altitude, Roast, Harvest. Rows can be renamed (e.g. "Blend", "Style", "Trade") or dropped; a value can wrap to two lines.
 4. **Bottom row (pinned to bottom):** bag photo 96 × 120 px (object-fit contain) on the left; right of it a 12 px secondary "Tasting notes" label and the notes at 20 px weight 500, one per line with commas.
 
