@@ -14,13 +14,17 @@ const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (
 const COUNTRIES = [
   ['Brazil'], ['Colombia'], ['Ethiopia'], ['Kenya'], ['Guatemala'], ['Honduras'], ['Costa Rica'], ['El Salvador'],
   ['Nicaragua'], ['Panama'], ['Mexico', 'Mexico', ['México']], ['Peru', 'Peru', ['Perú']], ['Bolivia'], ['Ecuador'],
-  ['Rwanda'], ['Burundi'], ['Uganda'], ['Tanzania'], ['DR Congo', 'Dem. Rep. Congo', ['DRC', 'Democratic Republic of the Congo', 'Democratic Republic of Congo']],
+  ['Rwanda'], ['Burundi'], ['Uganda'], ['Tanzania'], ['DR Congo', 'Dem. Rep. Congo', ['Democratic Republic of the Congo', 'Democratic Republic of Congo', 'DR Congo']],
   ['Yemen'], ['India'], ['Indonesia', 'Indonesia', ['Sumatra', 'Java', 'Sulawesi', 'Bali', 'Flores']], ['Vietnam', 'Vietnam', ['Viet Nam']],
-  ['China', 'China', ['Yunnan']], ['Myanmar'], ['Laos'], ['Thailand'], ['Philippines'], ['Papua New Guinea', 'Papua New Guinea', ['PNG']],
+  ['China', 'China', ['Yunnan']], ['Myanmar'], ['Laos'], ['Thailand'], ['Philippines'], ['Papua New Guinea'],
   ['Timor-Leste', 'Timor-Leste', ['East Timor']], ['Jamaica'], ['Haiti'], ['Dominican Republic', 'Dominican Rep.'], ['Cuba'], ['Puerto Rico'],
   ['Hawaii', 'United States of America', ['Kona']], ['Malawi'], ['Zambia'], ['Zimbabwe'], ['Cameroon'], ["Côte d'Ivoire", "Côte d'Ivoire", ['Ivory Coast']],
   ['Madagascar'], ['Venezuela'], ['Taiwan'], ['Nepal'], ['Australia'],
-].map(([name, ne, alts]) => ({ name, ne: ne || name, re: new RegExp('\\b(' + [name, ...(alts || [])].map(escRe).join('|') + ')\\b', 'i') }));
+].map(([name, ne, alts]) => {
+  // case-sensitive (Title Case or ALL CAPS), so words like "java" or a shop's initials don't count
+  const words = [name, ...(alts || [])].flatMap(w => [w, w.toUpperCase()]);
+  return { name, ne: ne || name, re: new RegExp('(?<![\\w-])(' + words.map(escRe).join('|') + ')(?![\\w-])') };
+});
 
 // "Label: value" lines we understand. Order = order on the card.
 const LABELS = [
@@ -219,12 +223,11 @@ function prose(text) {
 // Text that sits under a "coffee profile / about this coffee / origin / story" heading
 function profileSections(text) {
   const lines = text.split('\n');
-  const out = [];
-  lines.forEach((l, i) => {
-    if (/^(coffee profile|about (?:this|the) coffee|the coffee|origin|origins|behind the cup|story|the story|about)$/i.test(l.trim()))
-      out.push(lines.slice(i + 1, i + 4).join(' '));
-  });
-  return out.join('\n');
+  const under = re => lines.flatMap((l, i) => re.test(l.trim()) ? [lines.slice(i + 1, i + 3).join(' ')] : []).join('\n');
+  // sections about the coffee itself first; general "about" text often tells the roaster's story instead
+  const close = under(/^(coffee profile|about (?:this|the) coffee|the coffee|origins?|sourcing|where it'?s from)$/i);
+  if (findCountries(close).length) return close;
+  return under(/^(behind the cup|story|the story|about)$/i);
 }
 
 function findCountries(text) {
