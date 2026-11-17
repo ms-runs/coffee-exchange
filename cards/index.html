@@ -159,6 +159,11 @@
   .code-msg.ok{color:var(--ink-2)}
   .code-msg.bad{color:var(--warn)}
   .copy-json{align-self:flex-start;margin-left:-8px}
+  .remove-row{display:flex;padding-top:12px;margin-top:4px;border-top:1px solid var(--line)}
+  .remove-row[hidden]{display:none}
+  .btn.ghost.danger{color:var(--warn);margin-left:-8px}
+  .btn.ghost.danger:hover{background:var(--warn-wash)}
+  .save-status .btn.ghost.danger{margin-left:0}
   .actions .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,12px);background:var(--ink);color:var(--bg);font-size:14px;padding:10px 16px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s ease-out,transform .2s ease-out}
   .toast.on{opacity:1;transform:translate(-50%,0)}
@@ -282,6 +287,7 @@
       <button type="button" class="btn save" id="save-site">Save coffee</button>
       <p class="lookup-status save-status" id="save-status" role="status" aria-live="polite"></p>
       <button type="button" class="btn ghost copy-json" id="copy-json">Copy JSON instead</button>
+      <div class="remove-row" id="remove-row" hidden><button type="button" class="btn ghost danger" id="remove-site">Remove from the site</button></div>
     </fieldset>
   </form>
 </main>
@@ -841,6 +847,9 @@ function syncSave(){
   const n = (card.number || '').trim();
   b.textContent = !n ? 'Save coffee' : isUpdate() ? `Save changes to coffee ${num2(n)}` : `Save coffee ${num2(n)}`;
   b.disabled = !n || !(card.name || '').trim();
+  const onSite = !!n && coffees.some(c => num2(c.number) === num2(n));
+  $('remove-row').hidden = !onSite;
+  if (onSite) $('remove-site').textContent = `Remove coffee ${num2(n)} from the site`;
 }
 function saveStatus(html, bad){ const el = $('save-status'); el.classList.toggle('bad', !!bad); el.innerHTML = html; }
 const sharedCode = { get(){ try { return JSON.parse(localStorage.getItem('cx-rate:code')) || ''; } catch(e){ return ''; } },
@@ -903,6 +912,50 @@ async function saveToSite(replace){
   }
 }
 $('save-site').addEventListener('click', () => saveToSite(false));
+
+// removing: confirm here first; the Worker asks again if the coffee has ratings
+function askRemove(){
+  const n = num2(card.number), c = coffees.find(x => num2(x.number) === n); if (!c) return;
+  saveStatus(`Remove coffee ${esc(n)}${c.name ? ', ' + esc(c.name) + ',' : ''} from the site? It comes off the record and the globe. <button type="button" class="btn ghost danger" id="remove-yes">Remove it</button><button type="button" class="btn ghost" id="remove-no">Cancel</button>`, true);
+  $('remove-yes').addEventListener('click', () => removeFromSite(n, false));
+  $('remove-no').addEventListener('click', () => { saveStatus(''); $('remove-site').focus(); });
+  $('remove-no').focus();
+}
+async function removeFromSite(n, withReviews){
+  if (!API){ saveStatus('Removing isn\'t set up on this page.', true); return; }
+  const code = ($('code').value || sharedCode.get() || '').trim();
+  saveStatus('<span class="spin" aria-hidden="true"></span>Removing from the site…');
+  try {
+    const res = await fetch(API + '/api/coffees/remove', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({code, number: n, withReviews})});
+    const out = await res.json().catch(() => ({}));
+    if (res.status === 403 && out.code === 'group_code'){
+      sharedCode.set(''); $('code-field').hidden = false;
+      codeMsg(code ? 'That code isn\'t right.' : 'Add the group code, then press Remove again.', 'bad');
+      saveStatus(''); $('code').focus(); return;
+    }
+    if (res.status === 409 && out.reviews){
+      saveStatus(`Coffee ${esc(n)} has ${out.reviews} rating${out.reviews === 1 ? '' : 's'}. Removing it deletes ${out.reviews === 1 ? 'that rating' : 'those ratings'} too. <button type="button" class="btn ghost danger" id="remove-all">Remove coffee and ratings</button><button type="button" class="btn ghost" id="remove-no">Cancel</button>`, true);
+      $('remove-all').addEventListener('click', () => removeFromSite(n, true));
+      $('remove-no').addEventListener('click', () => { saveStatus('Nothing removed.'); });
+      $('remove-no').focus(); return;
+    }
+    const dropLocal = () => {
+      coffees = coffees.filter(c => num2(c.number) !== n);
+      if (num2(card.number) === n){ card._from = null; card._bagPath = null; card._photoNew = !!(card.bagImage && card.bagImage.src); }
+      fillStart([...$('start').options].some(o => o.value === 'draft')); $('start').value = 'new'; save(); syncSave();
+    };
+    if (res.status === 404 && out.code === 'not_found'){ dropLocal(); saveStatus(`Coffee ${esc(n)} was already off the site.`); return; }
+    if (!res.ok || !out.ok){ saveStatus(esc(out.error || 'Could not remove it. Try again in a minute.'), true); return; }
+    if (code) sharedCode.set(code);
+    $('code-field').hidden = true;
+    dropLocal();
+    const extra = out.reviewsDeleted ? ` and its ${out.reviewsDeleted} rating${out.reviewsDeleted === 1 ? '' : 's'}` : '';
+    saveStatus(`Removed coffee ${esc(n)}${extra}. It leaves the site in a minute or two. The card is still here if you want to fix it and save again. <a href="${esc(out.commit)}" target="_blank" rel="noopener">See the change</a>`);
+  } catch(e){
+    console.error(e); saveStatus('Could not reach the site. Check your connection and try again.', true);
+  }
+}
+$('remove-site').addEventListener('click', askRemove);
 
 /* ---------- start ---------- */
 async function init(){
