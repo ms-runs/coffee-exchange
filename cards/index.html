@@ -7,6 +7,7 @@
 <script src="../assets/theme.js"></script>
 <link rel="stylesheet" href="../assets/round.css">
 <script src="../assets/round.js"></script>
+<script src="../assets/config.js"></script>
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 <link rel="icon" href="../assets/icons/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
@@ -104,6 +105,20 @@
   .btn svg{width:16px;height:16px}
   .add-row{align-self:flex-start;margin-top:4px}
 
+  /* Roaster link */
+  .lookup-row{display:grid;grid-template-columns:1fr auto;gap:8px}
+  input[type=url]{width:100%;height:40px;padding:0 12px;border:1px solid var(--rule);border-radius:var(--r);background:var(--field);font-size:15px;transition:border-color .15s ease-out}
+  input[type=url]:hover{border-color:var(--ink-3)}
+  input[type=url]:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,63,160,.18)}
+  .lookup-status{margin:0;font-size:13px;line-height:1.45;color:var(--ink-2);display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}
+  .lookup-status:empty{display:none}
+  .lookup-status.bad{color:var(--warn)}
+  .lookup-status .btn.ghost{height:24px;padding:0 6px;font-size:13px;margin-left:-6px}
+  .spin{width:14px;height:14px;border-radius:50%;border:1.5px solid currentColor;border-right-color:transparent;animation:spin .7s linear infinite;flex:none;align-self:center}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .filled{animation:filled 1.2s ease-out}
+  @keyframes filled{from{background:rgba(26,63,160,.10)}to{background:var(--field)}}
+
   /* Photo */
   .drop{position:relative;display:grid;grid-template-columns:72px 1fr;gap:16px;align-items:center;padding:12px;border:1px dashed var(--rule);border-radius:var(--r);cursor:pointer;transition:border-color .15s ease-out,background-color .15s ease-out}
   .drop:hover,.drop.over{border-color:var(--blue);background:var(--wash)}
@@ -183,6 +198,15 @@
   </section>
 
   <form id="form" autocomplete="off" novalidate>
+    <fieldset>
+      <legend>Roaster link <small>Fills the card from the shop page</small></legend>
+      <div class="lookup-row">
+        <input type="url" id="lookup-url" aria-label="Roaster link" placeholder="Paste the coffee's shop page" inputmode="url" spellcheck="false">
+        <button type="button" class="btn" id="lookup-go">Fill in</button>
+      </div>
+      <p class="lookup-status" id="lookup-status" role="status" aria-live="polite"></p>
+    </fieldset>
+
     <fieldset>
       <legend>Coffee</legend>
       <label class="f">Start from
@@ -538,17 +562,24 @@ async function readPhoto(file){
   $('drop-title').textContent = 'Reading photo…';
   try{
     const raw = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
-    const img = await loadImage(raw);
+    await useImage(await loadImage(raw));
+  } catch(e){ console.error(e); toast('Could not read that image'); }
+  syncPhoto();
+}
+function useImage(img){
     // flatten onto white and cap the size: 600 px is ~300 dpi at the card's 25 × 32 mm photo
     const k = Math.min(1, 600 / Math.max(img.naturalWidth, img.naturalHeight));
     const cv = document.createElement('canvas'); cv.width = Math.round(img.naturalWidth*k); cv.height = Math.round(img.naturalHeight*k);
     const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,cv.width,cv.height); x.drawImage(img, 0, 0, cv.width, cv.height);
     card.bagImage = {src: cv.toDataURL('image/jpeg', 0.88), iw: cv.width, ih: cv.height};
     detected = detectColours(img);
-    if (detected.length) card.colour = detected[0];
+    if (detected.length) card.colour = mostColourful(detected);
     renderSwatches(); render(); save();
-  } catch(e){ console.error(e); toast('Could not read that image'); }
-  syncPhoto();
+}
+// the number should stand out, so start on the most colourful of the bag's colours (not the biggest area)
+function mostColourful(list){
+  const chroma = h => { const [, a, b] = toOklab(hex2rgb(h)); return Math.hypot(a, b); };
+  return list.reduce((best, h) => chroma(h) > chroma(best) + 0.02 ? h : best, list[0]);
 }
 
 /* ---------- form ---------- */
@@ -647,7 +678,8 @@ function nextNumber(){ const n = Math.max(0, ...coffees.map(c => parseInt(c.numb
 function fromData(c){
   return { number:c.number||'', name:c.name||'', roaster:c.roaster||'', roasterCity:c.roasterCity||'', pickedBy:c.pickedBy||'',
     colour:(c.colour||'#1A3FA0').toUpperCase(), details: clone(c.details && c.details.length ? c.details : DEFAULT_ROWS.map(l=>[l,''])),
-    tastingNotes: clone(c.tastingNotes||[]), bagImage:null, link:c.link||'', _bagPath:c.bagImage||null };
+    tastingNotes: clone(c.tastingNotes||[]), bagImage:null, link:c.link||'', _bagPath:c.bagImage||null,
+    origins: clone(c.origins||[]), _originText: ((c.details||[]).find(r => /^origins?$/i.test(r[0]))||[,''])[1] };
 }
 async function attachRepoPhoto(path){
   if (!path) return;
@@ -660,7 +692,8 @@ function toEntry(){
   return {
     number: card.number, name: card.name, roaster: card.roaster, roasterCity: card.roasterCity || null, pickedBy: card.pickedBy || null,
     colour: card.colour,
-    origins: origin ? origin.split(/,|\band\b|\//).map(s => s.trim()).filter(Boolean) : [],
+    origins: card.origins && card.origins.length && origin === card._originText ? card.origins
+      : origin ? origin.split(/,|\band\b|\//).map(s => s.trim()).filter(Boolean) : [],
     details: card.details.filter(r => (r[0]||'').trim() && (r[1]||'').trim()),
     tastingNotes: card.tastingNotes,
     bagImage: card.bagImage ? `assets/bags/${card.number||'00'}-${slug(card.name)}.jpg` : null,
@@ -668,7 +701,86 @@ function toEntry(){
   };
 }
 
+/* ---------- roaster link lookup (Worker: /api/lookup and /api/image) ---------- */
+let undoState = null, lookupBusy = false;
+const API = (window.CX_API || '').replace(/\/$/, '');
+function lookupStatus(html, bad){ const el = $('lookup-status'); el.classList.toggle('bad', !!bad); el.innerHTML = html; }
+function smallerImage(src){
+  // Shopify serves resized photos; 800 px is plenty for a 25 mm photo and the colour read
+  try { const u = new URL(src); if (/cdn\.shopify\.com$|\/cdn\/shop\//.test(u.hostname + u.pathname)) u.searchParams.set('width', '800'); return u.href; } catch(e){ return src; }
+}
+async function lookupLink(){
+  if (lookupBusy) return;
+  const raw = $('lookup-url').value.trim();
+  if (!raw){ $('lookup-url').focus(); return; }
+  const link = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+  if (!API){ lookupStatus('The lookup server is not set up yet. Fill the card in by hand.', true); return; }
+  lookupBusy = true;
+  const btn = $('lookup-go'); btn.disabled = true; btn.textContent = 'Reading…';
+  lookupStatus('<span class="spin" aria-hidden="true"></span>Reading the shop page…');
+  try {
+    const r = await fetch(API + '/api/lookup?url=' + encodeURIComponent(link));
+    const d = await r.json().catch(() => ({}));
+    if (!d.ok){ lookupStatus(esc(d.error || 'Could not read that page. Fill the card in by hand.'), true); return; }
+
+    undoState = {card: clone(card), detected: [...detected], start: $('start').value};
+    const sel = $('start');
+    const onSaved = coffees.some(c => c.number === sel.value);
+    const next = blankCard(onSaved ? nextNumber() : (card.number || nextNumber()));
+    next.pickedBy = card.pickedBy;
+    next.name = d.name || ''; next.roaster = d.roaster || ''; next.roasterCity = d.roasterCity || '';
+    const got = Object.fromEntries(d.details || []);
+    const order = ['Origin', 'Blend', 'Process', 'Variety', 'Altitude', 'Roast', 'Harvest', 'Producer', 'Style'];
+    // only rows the shop gave us: empty rows print as dashes and push the details into the photo
+    next.details = order.filter(l => got[l]).map(l => [l, got[l]]);
+    (d.details || []).forEach(([l, v]) => { if (!order.includes(l)) next.details.push([l, v]); });
+    next.tastingNotes = d.tastingNotes || [];
+    next.origins = d.origins || []; next._originText = got.Origin || '';
+    next.link = d.url || link;
+    card = next; detected = [];
+    if (onSaved) sel.value = 'new';
+    fillForm(); render(); save();
+
+    let photo = false;
+    if (d.image){
+      lookupStatus('<span class="spin" aria-hidden="true"></span>Getting the bag photo…');
+      try {
+        const ir = await fetch(API + '/api/image?url=' + encodeURIComponent(smallerImage(d.image)));
+        if (!ir.ok) throw new Error('image ' + ir.status);
+        const url = URL.createObjectURL(await ir.blob());
+        try { useImage(await loadImage(url)); photo = true; } finally { URL.revokeObjectURL(url); }
+        syncPhoto();
+      } catch(e){ console.warn(e); }
+    }
+
+    const filled = (d.details || []).map(r => r[0].toLowerCase());
+    if (d.tastingNotes && d.tastingNotes.length) filled.push('tasting notes');
+    if (photo) filled.push('bag photo');
+    const list = filled.length > 1 ? filled.slice(0, -1).join(', ') + ' and ' + filled[filled.length - 1] : (filled[0] || 'the name');
+    const missing = ['Origin', 'Process', 'Roast'].filter(l => !got[l]).map(l => l.toLowerCase());
+    if (!(d.tastingNotes || []).length) missing.push('tasting notes');
+    const miss = missing.length ? ` Not on the page: ${esc(missing.join(', '))}.` : '';
+    lookupStatus(`<span>Filled ${esc(list)} from ${esc(d.roaster || new URL(link).hostname)}.${miss} Check it against the bag before printing.</span><button type="button" class="btn ghost" id="lookup-undo">Undo</button>`);
+    $('lookup-undo').addEventListener('click', undoLookup);
+    document.querySelectorAll('#form input[data-k], #details textarea').forEach(el => { if (el.value){ el.classList.remove('filled'); void el.offsetWidth; el.classList.add('filled'); } });
+  } catch(e){
+    console.error(e);
+    lookupStatus('Could not reach the lookup server. Check your connection, or fill the card in by hand.', true);
+  } finally {
+    lookupBusy = false; btn.disabled = false; btn.textContent = 'Fill in';
+  }
+}
+function undoLookup(){
+  if (!undoState) return;
+  card = undoState.card; detected = undoState.detected; $('start').value = undoState.start; undoState = null;
+  fillForm(); render(); save();
+  lookupStatus('Put back what was there before.');
+}
+
 /* ---------- wire up ---------- */
+$('lookup-go').addEventListener('click', lookupLink);
+$('lookup-url').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); lookupLink(); } });
+$('lookup-url').addEventListener('paste', () => setTimeout(() => { if (/^https?:\/\/\S+\.\S+/i.test($('lookup-url').value.trim())) lookupLink(); }, 0));
 document.querySelectorAll('[data-k]').forEach(el => el.addEventListener('input', () => {
   const k = el.dataset.k;
   card[k] = k === 'tastingNotes' ? el.value.split(',').map(s => s.trim()).filter(Boolean) : el.value;

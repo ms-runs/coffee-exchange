@@ -8,6 +8,8 @@ Saves the group's reviews in Cloudflare D1 and serves them to the site. Free pla
 | `GET /api/reviews.csv` | One row per review, for Google Sheets: `=IMPORTDATA("https://<worker>/api/reviews.csv")` |
 | `POST /api/code` | `{ok}` for a group code, so the page can check it before saving |
 | `POST /api/reviews` | Save a review (needs the group code). One per person per coffee (name, case-insensitive); saving again replaces it |
+| `GET /api/lookup?url=` | Draft card fields from a roaster's product link: `{ok, source, name, roaster, details:[[label,value]], tastingNotes, origins, image, images}`. Cached for an hour |
+| `GET /api/image?url=` | A product photo passed through (images only, up to 8 MB) so the card maker can read its colours |
 
 - Database: D1 `coffee-exchange` (id in `wrangler.toml`), table from `migrations/0001_reviews.sql` (already applied to the live database).
 - Allowed sites (CORS): ms-runs.github.io and localhost. The site is standalone (not embedded on migsousa.com).
@@ -26,3 +28,15 @@ Local: `npx wrangler d1 migrations apply coffee-exchange --local` then `npx wran
 
 - Read: the Google Sheet above (refreshes about every hour), or open `/api/reviews.csv`.
 - Fix or delete a review: Cloudflare dashboard → Storage & Databases → D1 → `coffee-exchange` → Console, e.g. `DELETE FROM reviews WHERE number = '01' AND by_key = 'ben';`
+
+## Roaster lookup (`src/lookup.js`)
+
+Reads the Shopify feed (`<product link>.json`) and the product page together:
+
+- **Name and roaster:** feed title and vendor; a generic vendor ("My Store") falls back to the page's `og:site_name` or title. Bracketed origins and `| Espresso blend` suffixes come off the name (the suffix becomes a Style row).
+- **Details:** `Label: value` lines (Origin, Blend/Components, Process, Variety, Altitude, Roast, Harvest, Producer) in the description first, then the page. Several origins collapse to countries; altitudes become one range.
+- **Fallbacks:** countries named in the description or a "Coffee profile" section; washed/natural words for process; roast words or tags.
+- **Tasting notes:** a labelled line, a "Tasting notes" heading with short lines under it, or prose like "we are tasting …" / "layers of …".
+- Page forms, variant pickers and shop text ("sold out") are skipped. Countries match case-sensitively, so a shop's initials (e.g. DRC) don't count.
+
+Checked on Carter Coffee, Little Wolf, Deeper Roots and Seattle Coffee Gear (Nov 2026). Retailers (like Seattle Coffee Gear) give less than the roaster's own shop.
