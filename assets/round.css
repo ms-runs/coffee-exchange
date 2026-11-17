@@ -1,0 +1,21 @@
+/* Round: brand tokens shared by every page. Light is the default; dark follows assets/theme.js (data-theme="dark").
+   Colours from the Round brand guidelines v1.0. Outfit is self-hosted (SIL Open Font License, see fonts/OFL.txt). */
+@font-face{font-family:'Outfit';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/Outfit-400.woff2') format('woff2')}
+@font-face{font-family:'Outfit';font-style:normal;font-weight:600;font-display:swap;src:url('fonts/Outfit-600.woff2') format('woff2')}
+:root{
+  --blue:#1A3FA0; --blue-press:#0F2566; --on-blue:#FFFFFF;
+  --ink:#10162A; --ink-2:#46506A; --ink-3:#5F6984;
+  --rule:#C5CEE2; --line:#E1E6F0; --wash:#E9EEF8; --ghost:#A9B4CF;
+  --bg:#FFFFFF; --field:#FFFFFF; --bar:rgba(255,255,255,.94);
+  --warn:#A33A00; --warn-wash:#FFF3EC;
+  --font:'Outfit',Arial,sans-serif;
+}
+:root[data-theme=dark]{
+  --blue:#FFFFFF; --blue-press:#DDE2EC; --on-blue:#0B1124;
+  --ink:#FFFFFF; --ink-2:#B4BEDB; --ink-3:#8E99B8;
+  --rule:#2F3A62; --line:#1E2748; --wash:#151D3A; --ghost:#4A5680;
+  --bg:#0B1124; --field:#151D3A; --bar:rgba(11,17,36,.92);
+  --warn:#FFB38A; --warn-wash:#3A2418;
+}
+.round-mark,.round-lockup{display:block;flex:none}
+.round-mark{color:var(--blue)}

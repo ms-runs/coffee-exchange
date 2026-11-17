@@ -1,4 +1,4 @@
-/* Coffee exchange theme: light or dark.
+/* Round theme: light or dark.
    Follows the system setting unless someone picks one with the toggle; the choice is shared by every page
    (and the globe iframe) through localStorage. Embeds can force one with ?theme=dark or ?theme=light.
    Load it in <head> before the styles paint, so there's no flash. */
@@ -46,7 +46,7 @@
 
   /* ---- colour: keep a coffee's colour readable on the current background ----
      Light: as stored (already darkened to 3:1 on white). Dark: lift lightness in OKLab until 4.5:1 on the midnight background. */
-  var BG_DARK = [20, 27, 42];   // #141B2A
+  var BG_DARK = [11, 17, 36];   // #0B1124, Round midnight
   function lin(v){ v /= 255; return v <= 0.04045 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); }
   function delin(v){ return 255*(v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(v, 1/2.4) - 0.055); }
   function lum(c){ return 0.2126*lin(c[0]) + 0.7152*lin(c[1]) + 0.0722*lin(c[2]); }
