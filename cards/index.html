@@ -5,23 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <script src="../assets/theme.js"></script>
-<title>Card maker · Coffee exchange</title>
+<link rel="stylesheet" href="../assets/round.css">
+<script src="../assets/round.js"></script>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+<title>Card maker · Round</title>
 <style>
-  :root{
-    --blue:#0000FF; --blue-press:#0000C8; --ink:#14171F; --ink-2:#4E5566; --ink-3:#6B7282;
-    --rule:#C9CED8; --line:#E3E6EC; --wash:#F4F5F8; --field:#FFFFFF; --warn:#A33A00; --warn-wash:#FFF3EC;
-    --font:"Helvetica Neue",Helvetica,"TeX Gyre Heros",Arial,sans-serif;
-    --r:8px;
-  
-    --bg:#FFFFFF; --on-blue:#FFFFFF;
-  }
-  :root[data-theme=dark]{
-    --bg:#141B2A; --field:#182033; --ink:#FFFFFF; --ink-2:#B7BFCF; --ink-3:#8C95A8;
-    --rule:#3A4560; --line:#262F45; --wash:#1D2538;
-    --blue:#FFFFFF; --blue-press:#DDE2EC; --on-blue:#141B2A; --bar:rgba(20,27,42,.92);
-    --warn:#FFB38A; --warn-wash:#3A2418;
-  }
-
+  :root{--r:8px}
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased}
   body{font-variant-numeric:tabular-nums}
@@ -33,6 +24,8 @@
   header.top a{color:var(--blue);font-size:14px;text-decoration:none}
   header.top a:hover{text-decoration:underline;text-underline-offset:3px}
   .top-r{display:flex;align-items:center;gap:12px}
+  .top-r .mark{display:flex;color:var(--blue)}
+  .top-r .mark .round-lockup{height:24px;width:auto}
   .theme{all:unset;box-sizing:border-box;cursor:pointer;width:36px;height:36px;margin-right:-8px;display:grid;place-items:center;border-radius:8px;color:var(--ink-2)}
   .theme:hover{background:var(--wash);color:var(--ink)}
   .theme:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
@@ -42,7 +35,7 @@
 
   /* Preview */
   .stage{position:sticky;top:16px;background:var(--wash);border-radius:12px;padding:40px 32px 24px;display:flex;flex-direction:column;align-items:center}
-  .paper{width:100%;max-width:440px;aspect-ratio:397/559;background:#fff;box-shadow:0 1px 2px rgba(20,23,31,.06),0 8px 24px rgba(20,23,31,.08)}
+  .paper{width:100%;max-width:440px;aspect-ratio:397/559;background:#fff;box-shadow:0 1px 2px rgba(16,22,42,.06),0 8px 24px rgba(16,22,42,.08)}
   .paper svg{display:block;width:100%;height:100%}
   .stage-foot{width:100%;max-width:440px;display:flex;justify-content:space-between;margin-top:14px;font-size:13px;color:var(--ink-2)}
   .warn{width:100%;max-width:440px;margin-top:12px;padding:10px 12px;border-radius:var(--r);background:var(--warn-wash);color:var(--warn);font-size:13px;line-height:1.4}
@@ -60,7 +53,7 @@
   input[type=text],select,textarea{width:100%;height:40px;padding:0 12px;border:1px solid var(--rule);border-radius:var(--r);background:var(--field);font-size:15px;transition:border-color .15s ease-out}
   textarea{height:auto;min-height:40px;padding:9px 12px;resize:vertical;line-height:1.35}
   input[type=text]:hover,select:hover,textarea:hover{border-color:var(--ink-3)}
-  input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,0,255,.14)}
+  input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,63,160,.18)}
   select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%234E5566' stroke-width='1.5'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
 
   .details{display:flex;flex-direction:column;border-top:1px solid var(--ink)}
@@ -73,7 +66,7 @@
   .icon-btn:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
   .icon-btn svg{width:16px;height:16px}
 
-  .btn{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:var(--r);font-size:15px;font-weight:500;cursor:pointer;border:1px solid var(--rule);background:var(--field);color:var(--ink);transition:background-color .15s ease-out,border-color .15s ease-out,color .15s ease-out;white-space:nowrap}
+  .btn{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:var(--r);font-size:15px;font-weight:600;cursor:pointer;border:1px solid var(--rule);background:var(--field);color:var(--ink);transition:background-color .15s ease-out,border-color .15s ease-out,color .15s ease-out;white-space:nowrap}
   .btn:hover{border-color:var(--ink-3)}
   .btn:active{background:var(--wash)}
   .btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
@@ -90,16 +83,16 @@
   .drop:hover,.drop.over{border-color:var(--blue);background:var(--wash)}
   .drop:focus-within{outline:2px solid var(--blue);outline-offset:2px}
   .drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
-  .thumb{width:72px;height:90px;border-radius:4px;background:#EEF1F7;display:grid;place-items:center;overflow:hidden;color:var(--ink-3)}
+  .thumb{width:72px;height:90px;border-radius:4px;background:#E9EEF8;display:grid;place-items:center;overflow:hidden;color:var(--ink-3)}
   .thumb img{width:100%;height:100%;object-fit:contain}
-  .drop b{display:block;font-size:15px;font-weight:500}
+  .drop b{display:block;font-size:15px;font-weight:600}
   .drop span{display:block;font-size:13px;color:var(--ink-2);margin-top:2px}
   .photo-actions{display:flex;gap:4px}
   .photo-actions[hidden]{display:none}
 
   /* Colour */
   .swatches{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .sw{all:unset;box-sizing:border-box;position:relative;width:56px;height:56px;border-radius:10px;cursor:pointer;display:flex;align-items:flex-end;padding:6px;color:#fff;font-size:11px;font-weight:500;transition:transform .15s ease-out}
+  .sw{all:unset;box-sizing:border-box;position:relative;width:56px;height:56px;border-radius:10px;cursor:pointer;display:flex;align-items:flex-end;padding:6px;color:#fff;font-size:11px;font-weight:600;transition:transform .15s ease-out}
   .sw:hover{transform:translateY(-1px)}
   .sw:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
   .sw[aria-pressed=true]{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ink)}
@@ -108,7 +101,7 @@
   .sw.custom svg{width:18px;height:18px}
   .swatch-note{font-size:13px;color:var(--ink-2);line-height:1.4}
   .contrast{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink-2);padding:10px 0 0;border-top:1px solid var(--line)}
-  .contrast b{font-weight:500;color:var(--ink)}
+  .contrast b{font-weight:600;color:var(--ink)}
   .contrast.bad b{color:var(--warn)}
 
   /* Sheet */
@@ -139,7 +132,7 @@
     <h1>Card maker</h1>
     <p>Fill in the coffee, check the card, then print one A6 card or four to an A4 sheet.</p>
   </div>
-  <span class="top-r"><a href="../">Coffee exchange</a><button type="button" class="theme" data-theme-toggle aria-label="Switch to dark mode"></button></span>
+  <span class="top-r"><a href="../" class="mark" aria-label="Round, the record"><svg class="round-lockup" viewBox="-72 -72 612.17 144" role="img" aria-label="Round" focusable="false"><path d="M68.00 0.00 L96.00 0.00" stroke="currentColor" stroke-width="32" fill="none"/><circle cx="0" cy="0" r="59.0" fill="none" stroke="currentColor" stroke-width="26"/><circle cx="0" cy="0" r="32" fill="currentColor"/><path d="M120 54V-54H162.2Q172.7 -54 180.6 -49.9Q188.5 -45.9 192.9 -38.8Q197.3 -31.7 197.3 -22.5Q197.3 -9.8 189.4 -1.5Q181.5 6.8 168.2 8.5L204.3 54H179L144.4 8.8H140.9V54ZM160.4 -36.9H140.9V-7.5H160.4Q168.1 -7.5 172.3 -11.4Q176.5 -15.3 176.5 -22.2Q176.5 -28.5 172.3 -32.7Q168.1 -36.9 160.4 -36.9ZM248 55.5Q236.8 55.5 227.8 50.4Q218.8 45.2 213.5 36.5Q208.2 27.7 208.2 16.7Q208.2 5.9 213.4 -2.8Q218.6 -11.6 227.6 -16.7Q236.6 -21.9 247.8 -21.9Q259 -21.9 268.1 -16.7Q277.2 -11.6 282.4 -2.9Q287.6 5.8 287.6 16.7Q287.6 27.7 282.4 36.6Q277.2 45.4 268.2 50.5Q259.2 55.5 248 55.5ZM247.8 36.8Q256.4 36.8 261.7 31.2Q267 25.6 267 16.8Q267 8.1 261.6 2.5Q256.3 -3 247.8 -3Q239.5 -3 234.1 2.6Q228.8 8.2 228.8 16.8Q228.8 25.6 234.1 31.2Q239.5 36.8 247.8 36.8ZM329.1 55.5Q319.3 55.5 311.7 51.4Q304 47.2 299.7 39.9Q295.4 32.5 295.4 22.8V-20.2H315.7V22.4Q315.7 29.3 319.3 33.1Q322.8 36.9 329.1 36.9Q335.4 36.9 338.9 33.2Q342.5 29.4 342.5 22.4V-20.2H362.6V22.8Q362.6 32.6 358.4 40Q354.1 47.4 346.5 51.5Q338.9 55.5 329.1 55.5ZM375.5 54V-20.2H395.6V-13.1Q399.6 -17.3 405.1 -19.5Q410.5 -21.7 417.1 -21.7Q425.3 -21.7 431.7 -17.7Q438.2 -13.6 441.8 -7Q445.5 -0.4 445.5 7V54H425.4V11.4Q425.4 4.8 421.2 0.7Q417 -3.5 410.5 -3.5Q404.1 -3.5 399.8 0.7Q395.6 4.8 395.6 11.4V54ZM490.1 55.5Q479.8 55.5 471.7 50.5Q463.5 45.4 458.8 36.6Q454.1 27.9 454.1 17Q454.1 6.1 458.8 -2.8Q463.5 -11.6 471.7 -16.7Q479.8 -21.7 490.1 -21.7Q496.2 -21.7 501.7 -19.7Q507.1 -17.6 511.1 -13.9V-57.1H531.3V54H511.3V47.4Q507.3 51.2 501.8 53.4Q496.4 55.5 490.1 55.5ZM493.5 36.9Q501.9 36.9 507.1 31.3Q512.4 25.7 512.4 16.8Q512.4 8.1 507.1 2.5Q501.9 -3.1 493.5 -3.1Q485.2 -3.1 479.9 2.5Q474.7 8.1 474.7 16.8Q474.7 25.7 479.9 31.3Q485.2 36.9 493.5 36.9Z" fill="currentColor"/></svg></a><button type="button" class="theme" data-theme-toggle aria-label="Switch to dark mode"></button></span>
 </header>
 
 <main>
@@ -228,9 +221,11 @@
 
 /* ---------- constants (from docs/card-design-spec.md) ---------- */
 const W = 397, H = 559, M = 40;           // A6 in CSS px at 96 dpi, margin
-const INK = '#14171F', INK2 = '#4E5566', RULE = '#C9CED8', PH = '#EEF1F7';
+const INK = '#10162A', INK2 = '#46506A', RULE = '#C5CEE2', PH = '#E9EEF8', BLUE = '#1A3FA0';
 const PX_MM = 25.4 / 96;                  // px → mm
-const CAP = 0.718, DIGIT = 0.709;         // Helvetica cap / figure height (em)
+const CAP = 0.70, DIGIT = 0.714;          // Outfit cap / figure height (em)
+// the Round lockup as outlines (Outfit SemiBold "Round" beside the cup, small cut), in units of a 144-wide cup centred on 0,0
+const LOCKUP = {"ops":[["m",120.0,54.0],["l",120.0,-54.0],["l",162.2,-54.0],["c",169.2,-54.0,175.3,-52.6,180.6,-49.9],["c",185.9,-47.2,190.0,-43.5,192.9,-38.8],["c",195.8,-34.1,197.3,-28.7,197.3,-22.5],["c",197.3,-14.0,194.6,-7.0,189.4,-1.5],["c",184.1,4.1,177.0,7.4,168.2,8.5],["l",204.3,54.0],["l",179.0,54.0],["l",144.4,8.8],["l",140.9,8.8],["l",140.9,54.0],["h"],["m",160.4,-36.9],["l",140.9,-36.9],["l",140.9,-7.5],["l",160.4,-7.5],["c",165.5,-7.5,169.5,-8.8,172.3,-11.4],["c",175.1,-14.0,176.5,-17.6,176.5,-22.2],["c",176.5,-26.4,175.1,-29.9,172.3,-32.7],["c",169.5,-35.5,165.5,-36.9,160.4,-36.9],["h"],["m",248.0,55.5],["c",240.5,55.5,233.8,53.8,227.8,50.4],["c",221.8,47.0,217.0,42.3,213.5,36.5],["c",209.9,30.6,208.2,24.0,208.2,16.7],["c",208.2,9.5,209.9,3.0,213.4,-2.8],["c",216.9,-8.7,221.6,-13.3,227.6,-16.7],["c",233.6,-20.2,240.3,-21.9,247.8,-21.9],["c",255.3,-21.9,262.1,-20.2,268.1,-16.7],["c",274.1,-13.3,278.9,-8.7,282.4,-2.9],["c",285.9,2.9,287.6,9.4,287.6,16.7],["c",287.6,24.0,285.9,30.7,282.4,36.6],["c",278.9,42.5,274.2,47.1,268.2,50.5],["c",262.2,53.8,255.4,55.5,248.0,55.5],["h"],["m",247.8,36.8],["c",253.6,36.8,258.2,34.9,261.7,31.2],["c",265.3,27.4,267.0,22.7,267.0,16.8],["c",267.0,11.0,265.2,6.2,261.6,2.5],["c",258.1,-1.2,253.5,-3.0,247.8,-3.0],["c",242.3,-3.0,237.7,-1.1,234.1,2.6],["c",230.6,6.3,228.8,11.1,228.8,16.8],["c",228.8,22.7,230.6,27.4,234.1,31.2],["c",237.7,34.9,242.3,36.8,247.8,36.8],["h"],["m",329.1,55.5],["c",322.5,55.5,316.7,54.2,311.7,51.4],["c",306.6,48.6,302.6,44.8,299.7,39.9],["c",296.9,35.0,295.4,29.3,295.4,22.8],["l",295.4,-20.2],["l",315.7,-20.2],["l",315.7,22.4],["c",315.7,27.0,316.9,30.5,319.3,33.1],["c",321.6,35.7,324.9,36.9,329.1,36.9],["c",333.3,36.9,336.6,35.7,338.9,33.2],["c",341.3,30.7,342.5,27.1,342.5,22.4],["l",342.5,-20.2],["l",362.6,-20.2],["l",362.6,22.8],["c",362.6,29.4,361.2,35.1,358.4,40.0],["c",355.5,44.9,351.6,48.8,346.5,51.5],["c",341.5,54.2,335.6,55.5,329.1,55.5],["h"],["m",375.5,54.0],["l",375.5,-20.2],["l",395.6,-20.2],["l",395.6,-13.1],["c",398.3,-15.9,401.4,-18.0,405.1,-19.5],["c",408.7,-21.0,412.7,-21.7,417.1,-21.7],["c",422.5,-21.7,427.4,-20.4,431.7,-17.7],["c",436.0,-15.0,439.4,-11.4,441.8,-7.0],["c",444.3,-2.6,445.5,2.1,445.5,7.0],["l",445.5,54.0],["l",425.4,54.0],["l",425.4,11.4],["c",425.4,7.0,424.0,3.5,421.2,0.7],["c",418.4,-2.1,414.8,-3.5,410.5,-3.5],["c",406.2,-3.5,402.6,-2.1,399.8,0.7],["c",397.0,3.5,395.6,7.0,395.6,11.4],["l",395.6,54.0],["h"],["m",490.1,55.5],["c",483.2,55.5,477.1,53.8,471.7,50.5],["c",466.2,47.1,461.9,42.5,458.8,36.6],["c",455.7,30.8,454.1,24.2,454.1,17.0],["c",454.1,9.7,455.7,3.1,458.8,-2.8],["c",461.9,-8.7,466.2,-13.3,471.7,-16.7],["c",477.1,-20.0,483.2,-21.7,490.1,-21.7],["c",494.2,-21.7,498.1,-21.0,501.7,-19.7],["c",505.3,-18.3,508.5,-16.4,511.1,-13.9],["l",511.1,-57.1],["l",531.3,-57.1],["l",531.3,54.0],["l",511.3,54.0],["l",511.3,47.4],["c",508.6,50.0,505.5,52.0,501.8,53.4],["c",498.2,54.8,494.3,55.5,490.1,55.5],["h"],["m",493.5,36.9],["c",499.1,36.9,503.7,35.1,507.1,31.3],["c",510.6,27.6,512.4,22.8,512.4,16.8],["c",512.4,11.0,510.6,6.2,507.1,2.5],["c",503.7,-1.3,499.1,-3.1,493.5,-3.1],["c",487.9,-3.1,483.4,-1.3,479.9,2.5],["c",476.5,6.2,474.7,11.0,474.7,16.8],["c",474.7,22.8,476.5,27.6,479.9,31.3],["c",483.4,35.1,487.9,36.9,493.5,36.9],["h"]],"w":612.17,"cut":{"ring":26,"gap":14,"hw":32,"hl":24}};
 const DEFAULT_ROWS = ['Origin','Process','Variety','Altitude','Roast','Harvest'];
 const FALLBACK = {
   number:'01', name:'Alchemy', roaster:'Deeper Roots Coffee', roasterCity:'Cincinnati, OH', pickedBy:null,
@@ -250,20 +245,37 @@ const store = {
 };
 
 function blankCard(number){
-  return { number:number||'', name:'', roaster:'', roasterCity:'', pickedBy:'', colour:'#0000FF',
+  return { number:number||'', name:'', roaster:'', roasterCity:'', pickedBy:'', colour:'#1A3FA0',
     details: DEFAULT_ROWS.map(l => [l,'']), tastingNotes:[], bagImage:null, link:'' };
 }
 const clone = o => JSON.parse(JSON.stringify(o));
 const $ = id => document.getElementById(id);
 
-/* ---------- text measuring with jsPDF's Helvetica metrics (same in preview and PDF) ---------- */
+/* ---------- text measuring with jsPDF's metrics for Outfit (same in preview and PDF) ---------- */
 const hasPdf = !!(window.jspdf && window.jspdf.jsPDF);
 const meter = hasPdf ? new window.jspdf.jsPDF({unit:'pt'}) : null;
+let FONT = 'helvetica', FONT_DATA = null;    // becomes 'Outfit' once the TTFs are in
+async function loadFonts(){
+  const b64 = buf => { const u = new Uint8Array(buf); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+  try {
+    const [r, b] = await Promise.all(['vendor/Outfit-Regular.ttf', 'vendor/Outfit-SemiBold.ttf'].map(u => fetch(u).then(x => { if (!x.ok) throw new Error(u); return x.arrayBuffer(); })));
+    FONT_DATA = {regular: b64(r), bold: b64(b)};
+    if (meter) addFonts(meter);
+    FONT = 'Outfit';
+  } catch(e){ console.warn('Outfit did not load; cards fall back to Helvetica', e); }
+  try { await Promise.all([document.fonts.load("400 16px 'Outfit'"), document.fonts.load("600 16px 'Outfit'")]); } catch(e){}
+}
+function addFonts(doc){
+  if (!FONT_DATA) return doc;
+  doc.addFileToVFS('Outfit-Regular.ttf', FONT_DATA.regular); doc.addFont('Outfit-Regular.ttf', 'Outfit', 'normal');
+  doc.addFileToVFS('Outfit-SemiBold.ttf', FONT_DATA.bold); doc.addFont('Outfit-SemiBold.ttf', 'Outfit', 'bold');
+  return doc;
+}
 let ctx2d;
 function textW(text, size, bold){
-  if (meter){ meter.setFont('helvetica', bold ? 'bold' : 'normal'); return meter.getStringUnitWidth(text) * size; }
+  if (meter){ meter.setFont(FONT, bold ? 'bold' : 'normal'); return meter.getStringUnitWidth(text) * size; }
   ctx2d = ctx2d || document.createElement('canvas').getContext('2d');
-  ctx2d.font = (bold?'700 ':'400 ') + size + 'px Helvetica, Arial, sans-serif';
+  ctx2d.font = (bold?'600 ':'400 ') + size + "px 'Outfit', Arial, sans-serif";
   return ctx2d.measureText(text).width;
 }
 function wrap(text, size, bold, maxW){
@@ -287,11 +299,11 @@ function layout(c){
   const T = (text,x,y,size,o={}) => ops.push({t:'text',text,x,y,size,bold:!!o.bold,color:o.color||INK,align:o.align||'left',cs:o.cs||0});
   const rule = (x,y,w,color) => ops.push({t:'rect',x,y,w,h:1,color});
 
-  // Header: number + "Coffee exchange / Picked by"
-  const numSize = 104;
+  // Header: number + the Round lockup (disc in the coffee's colour) over "Picked by"
+  const numSize = 104, LH_ = 22, LW_ = LH_ * LOCKUP.w / 144;
   T(c.number || '00', M, M + numSize*DIGIT, numSize, {bold:true, color:c.colour, cs:-0.04*numSize});
-  T('Coffee exchange', R, M + 13*CAP, 13, {color:INK2, align:'right'});
-  if (c.pickedBy) T('Picked by ' + c.pickedBy, R, M + 13*CAP + 17, 13, {color:INK2, align:'right'});
+  ops.push({t:'lockup', x:R - LW_, y:M, h:LH_, color:BLUE, coffee:c.colour || BLUE});
+  if (c.pickedBy) T('Picked by ' + c.pickedBy, R, M + LH_ + 10 + 13*CAP, 13, {color:INK2, align:'right'});
 
   // Name and roaster
   let y = M + numSize*0.8 + 24;                       // top of name block
@@ -349,7 +361,13 @@ function renderSVG(c){
   let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Card for ${esc(c.name||'coffee')}"><rect width="${W}" height="${H}" fill="#fff"/>`;
   ops.forEach(o => {
     if (o.t === 'text'){
-      s += `<text x="${o.x.toFixed(2)}" y="${o.y.toFixed(2)}" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif" font-size="${o.size}" font-weight="${o.bold?700:400}" fill="${o.color}"${o.align==='right'?' text-anchor="end"':''}${o.cs?` letter-spacing="${o.cs.toFixed(2)}"`:''}>${esc(o.text)}</text>`;
+      s += `<text x="${o.x.toFixed(2)}" y="${o.y.toFixed(2)}" font-family="${FONT === 'Outfit' ? "'Outfit', Arial, sans-serif" : "Helvetica, 'Helvetica Neue', Arial, sans-serif"}" style="font-kerning:none" font-size="${o.size}" font-weight="${o.bold?(FONT === 'Outfit' ? 600 : 700):400}" fill="${o.color}"${o.align==='right'?' text-anchor="end"':''}${o.cs?` letter-spacing="${o.cs.toFixed(2)}"`:''}>${esc(o.text)}</text>`;
+    } else if (o.t === 'lockup'){
+      const k = o.h / 144, cu = LOCKUP.cut;
+      s += `<g transform="translate(${(o.x + 72*k).toFixed(2)} ${(o.y + 72*k).toFixed(2)}) scale(${k.toFixed(5)})">` +
+        `<path d="M${72-4} 0H${72+cu.hl}" stroke="${o.color}" stroke-width="${cu.hw}"/>` +
+        `<circle r="${72 - cu.ring/2}" fill="none" stroke="${o.color}" stroke-width="${cu.ring}"/><circle r="${72 - cu.ring - cu.gap}" fill="${o.coffee}"/>` +
+        `<path fill="${o.color}" d="${LOCKUP.ops.map(a => a[0] === 'h' ? 'Z' : a[0].toUpperCase() + a.slice(1).join(' ')).join('')}"/></g>`;
     } else if (o.t === 'rect'){
       s += `<rect x="${o.x}" y="${o.y.toFixed(2)}" width="${o.w}" height="${o.h}" fill="${o.color}"/>`;
     } else if (o.t === 'img'){
@@ -364,12 +382,21 @@ function drawPDF(doc, c, ox, oy){
   const {ops} = layout(c);
   ops.forEach(o => {
     if (o.t === 'text'){
-      doc.setFont('helvetica', o.bold ? 'bold' : 'normal');
+      doc.setFont(FONT, o.bold ? 'bold' : 'normal');
       doc.setFontSize(o.size * 0.75);
       doc.setTextColor(o.color);
       let x = o.x;
       // jsPDF's right-align ignores negative charSpace; we only right-align unspaced text
       doc.text(o.text, ox + x*PX_MM, oy + o.y*PX_MM, {align:o.align, charSpace: o.cs ? o.cs*PX_MM : 0});
+    } else if (o.t === 'lockup'){
+      // drawn as outlines, so the wordmark prints exactly whatever fonts the printer has
+      const k = o.h / 144 * PX_MM, cu = LOCKUP.cut, cx = ox + o.x*PX_MM + 72*k, cy = oy + o.y*PX_MM + 72*k;
+      doc.setDrawColor(o.color); doc.setLineCap('butt');
+      doc.setLineWidth(cu.hw * k); doc.line(cx + (72-4)*k, cy, cx + (72+cu.hl)*k, cy);
+      doc.setLineWidth(cu.ring * k); doc.circle(cx, cy, (72 - cu.ring/2)*k, 'S');
+      doc.setFillColor(o.coffee); doc.circle(cx, cy, (72 - cu.ring - cu.gap)*k, 'F');
+      doc.setFillColor(o.color);
+      doc.path(LOCKUP.ops.map(a => a[0] === 'h' ? {op:'h', c:[]} : {op:a[0], c:a.slice(1).map((v, i) => i % 2 ? cy + v*k : cx + v*k)})).fill();
     } else if (o.t === 'rect'){
       doc.setFillColor(o.color);
       doc.rect(ox + o.x*PX_MM, oy + o.y*PX_MM, o.w*PX_MM, Math.max(o.h*PX_MM, 0.2), 'F');
@@ -388,21 +415,21 @@ async function busy(btn, label, fn){
   btn.textContent = old; btn.disabled = false; syncButtons();
 }
 function downloadA6(){
-  const doc = new window.jspdf.jsPDF({unit:'mm', format:[105,148], orientation:'portrait'});
+  const doc = addFonts(new window.jspdf.jsPDF({unit:'mm', format:[105,148], orientation:'portrait'}));
   drawPDF(doc, card, 0, 0);
   doc.setProperties({title: `Coffee ${card.number} ${card.name}`.trim()});
   doc.save(`coffee-${card.number||'00'}-${slug(card.name)}-a6.pdf`);
 }
 function downloadA4(){
-  const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4', orientation:'portrait'});
+  const doc = addFonts(new window.jspdf.jsPDF({unit:'mm', format:'a4', orientation:'portrait'}));
   for (let p = 0; p < sheet.length; p += 4){
     if (p) doc.addPage();
     sheet.slice(p, p+4).forEach((c,i) => drawPDF(doc, c, (i%2)*105, Math.floor(i/2)*148));
     // faint cut guides at the shared card edges
-    doc.setDrawColor('#C9CED8'); doc.setLineWidth(0.1);
+    doc.setDrawColor('#C5CEE2'); doc.setLineWidth(0.1);
     doc.line(105, 0, 105, 296); doc.line(0, 148, 210, 148);
   }
-  doc.setProperties({title:'Coffee exchange cards'});
+  doc.setProperties({title:'Round cards'});
   doc.save('coffee-cards-a4.pdf');
 }
 
@@ -579,7 +606,7 @@ function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add(
 function nextNumber(){ const n = Math.max(0, ...coffees.map(c => parseInt(c.number,10) || 0)); return String(n+1).padStart(2,'0'); }
 function fromData(c){
   return { number:c.number||'', name:c.name||'', roaster:c.roaster||'', roasterCity:c.roasterCity||'', pickedBy:c.pickedBy||'',
-    colour:(c.colour||'#0000FF').toUpperCase(), details: clone(c.details && c.details.length ? c.details : DEFAULT_ROWS.map(l=>[l,''])),
+    colour:(c.colour||'#1A3FA0').toUpperCase(), details: clone(c.details && c.details.length ? c.details : DEFAULT_ROWS.map(l=>[l,''])),
     tastingNotes: clone(c.tastingNotes||[]), bagImage:null, link:c.link||'', _bagPath:c.bagImage||null };
 }
 async function attachRepoPhoto(path){
@@ -634,6 +661,7 @@ $('copy-json').addEventListener('click', async () => {
 
 /* ---------- start ---------- */
 async function init(){
+  await loadFonts();
   const draft = store.get('draft'); sheet = store.get('sheet') || [];
   try { const r = await fetch('../data/coffees.json', {cache:'no-store'}); coffees = (await r.json()).coffees || []; }
   catch(e){ coffees = [FALLBACK]; }
