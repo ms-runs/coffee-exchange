@@ -28,7 +28,7 @@ A rotating coffee swap between friends in Cincinnati, London, New York and Barce
 
 | Piece | Choice | Notes |
 | --- | --- | --- |
-| Front end | Vanilla JS on GitHub Pages, embedded on migsousa.com (Squarespace Code block) | Same pattern as Zine Maker |
+| Front end | Vanilla JS on GitHub Pages, a standalone site (not embedded on migsousa.com) | Decided 17 Nov 2026 |
 | Print export | jsPDF, A6 pages and an A4 sheet of four | |
 | Coffee lookup | One Cloudflare Worker that fetches a roaster link and returns clean fields | Free plan: 100,000 requests/day (checked Nov 2026) |
 | Shopify shops | Add `.json` to the product link | Tested on Little Wolf |

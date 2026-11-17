@@ -2,7 +2,7 @@
 
 Round is the coffee exchange: a rotating coffee swap between friends in Cincinnati, New York, London and Barcelona, plus the web tools that run it. Each turn, one person picks one or two coffees and posts a small bag of each to everyone, with a printed card. The group tastes, rates and catches up.
 
-Live: https://ms-runs.github.io/coffee-exchange/ (embedded on migsousa.com with a Squarespace Code block, same as Zine Maker)
+Live: https://ms-runs.github.io/coffee-exchange/ (a standalone site; not embedded on migsousa.com)
 
 ## What's here
 

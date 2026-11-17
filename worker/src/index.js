@@ -10,8 +10,6 @@
 
 const ALLOWED_ORIGINS = [
   'https://ms-runs.github.io',
-  'https://migsousa.com',
-  'https://www.migsousa.com',
 ];
 const SCALE = 10;
 const PROFILE_KEYS = ['acidity', 'body', 'sweetness', 'bitterness', 'finish'];

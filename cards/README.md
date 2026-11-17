@@ -13,11 +13,6 @@ The preview and the PDF come from the same layout function and both use jsPDF's 
 
 jsPDF 2.5.2 is vendored in `vendor/` so the page has no CDN dependency.
 
-Embed on migsousa.com:
-
-```html
-<iframe src="https://ms-runs.github.io/coffee-exchange/cards/"
-        style="width:100%;height:1900px;border:0" title="Coffee card maker"></iframe>
-```
+Lives at https://ms-runs.github.io/coffee-exchange/cards/, with the same site menu as the other pages.
 
 Layout spec: [`docs/card-design-spec.md`](../docs/card-design-spec.md).
