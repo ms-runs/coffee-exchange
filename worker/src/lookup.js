@@ -118,8 +118,9 @@ export function extract({ product, html, url }) {
   if (blend.length) details.push(['Blend', blend.join('; ').replace(/\s*\|\s*/g, ' / ')]);
 
   // Process: labelled, else washed/natural/honey words in the description
-  let process = uniqCase(pick('Process').map(cap));
+  let process = uniqCase((desc.fields.Process || []).map(cap));
   if (!process.length) process = processWords(descText + '\n' + blend.join(' '));
+  if (!process.length) process = uniqCase((page.fields.Process || []).map(cap));
   if (process.length) details.push(['Process', joinAnd(process)]);
 
   const variety = uniqCase(pick('Variety').flatMap(v => v.split(/\s*[,/&]\s*|\s+and\s+/)).map(cap).filter(Boolean));
@@ -128,7 +129,7 @@ export function extract({ product, html, url }) {
   const alt = altitude(pick('Altitude'));
   if (alt) details.push(['Altitude', alt]);
 
-  let roast = pick('Roast')[0] || roastWords(descText) || roastFromTags(product && product.tags);
+  let roast = (desc.fields.Roast || [])[0] || roastWords(descText) || (page.fields.Roast || [])[0] || roastFromTags(product && product.tags);
   if (roast) details.push(['Roast', cap(roast)]);
 
   const harvest = pick('Harvest')[0];
@@ -163,7 +164,7 @@ export function extract({ product, html, url }) {
 function readText(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   const fields = {}, notes = [];
-  const add = (k, v) => { v = tidy(v); if (!v || v.length > 160 || shopJunk(v)) return; (fields[k] = fields[k] || []).push(v); };
+  const add = (k, v) => { v = tidy(v); if (!v || v.length > 160 || shopJunk(v) || /^(varies|various|n\/?a|tbc|tbd|none|-|—)$/i.test(v)) return; (fields[k] = fields[k] || []).push(v); };
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
