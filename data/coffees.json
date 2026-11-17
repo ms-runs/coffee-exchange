@@ -5,7 +5,7 @@
       "name": "Alchemy",
       "roaster": "Deeper Roots Coffee",
       "roasterCity": "Cincinnati, OH",
-      "pickedBy": null,
+      "pickedBy": "Miguel",
       "colour": "#AE8803",
       "origins": [
         "Brazil",
@@ -47,7 +47,7 @@
       "name": "Companion",
       "roaster": "Little Wolf Coffee",
       "roasterCity": "Ipswich, MA",
-      "pickedBy": null,
+      "pickedBy": "Miguel",
       "colour": "#008CFF",
       "origins": [
         "Colombia"
