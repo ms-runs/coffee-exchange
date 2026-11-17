@@ -77,6 +77,44 @@
       ],
       "bagImage": null,
       "link": "https://littlewolf.coffee/products/companion-blend-subscription"
+    },
+    {
+      "number": "03",
+      "name": "Bread & Butter",
+      "roaster": "Carter Coffee",
+      "roasterCity": null,
+      "pickedBy": "Miguel",
+      "colour": "#B82D20",
+      "origins": [
+        "Brazil",
+        "Ethiopia"
+      ],
+      "details": [
+        [
+          "Origin",
+          "Brazil, Ethiopia"
+        ],
+        [
+          "Process",
+          "Natural and washed"
+        ],
+        [
+          "Variety",
+          "Mixed, Heirloom"
+        ],
+        [
+          "Altitude",
+          "900–2100 masl"
+        ]
+      ],
+      "tastingNotes": [
+        "Blueberry jam",
+        "chocolate",
+        "hazelnuts",
+        "buttery finish"
+      ],
+      "bagImage": "assets/bags/03-bread-butter.jpg",
+      "link": "https://cartercoffee.uk/products/bread-butter-blend-ethiopia-brazil-colombia"
     }
   ]
 }
