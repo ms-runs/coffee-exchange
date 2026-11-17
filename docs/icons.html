@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Icons · Round</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/round.css">
+<script src="../assets/theme.js"></script>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+  main{max-width:1040px;margin:0 auto;padding:48px 24px 96px}
+  h1{font-weight:600;font-size:44px;line-height:1.05;margin:0 0 12px;letter-spacing:-.01em}
+  .lede{color:var(--ink-2);max-width:56ch;margin:0 0 40px}
+  .lede code{font-size:15px}
+  .bar{display:flex;gap:8px;align-items:center;margin:0 0 48px;flex-wrap:wrap}
+  .bar span{color:var(--ink-3);font-size:15px;margin-right:4px}
+  .seg{all:unset;font:400 15px/1 var(--font);padding:10px 14px;border-radius:8px;border:1px solid var(--rule);cursor:pointer;color:var(--ink-2)}
+  .seg[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:var(--on-blue)}
+  .seg:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  h2{font-weight:600;font-size:15px;line-height:1.45;color:var(--ink-2);margin:0 0 12px}
+  section{margin:0 0 48px}
+  ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
+  li{border-right:1px solid var(--line);border-bottom:1px solid var(--line);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--ink)}
+  li code{font:400 13px/1.4 var(--font);color:var(--ink-3)}
+  .grid-on li svg{background:
+    linear-gradient(var(--wash),var(--wash)) 0 0/100% 100%;
+    outline:1px solid var(--line)}
+  .grid-on li svg{background-image:
+    linear-gradient(to right, transparent calc(12.5% - .5px), var(--rule) calc(12.5% - .5px), var(--rule) calc(12.5% + .5px), transparent calc(12.5% + .5px), transparent calc(87.5% - .5px), var(--rule) calc(87.5% - .5px), var(--rule) calc(87.5% + .5px), transparent calc(87.5% + .5px)),
+    linear-gradient(to bottom, transparent calc(12.5% - .5px), var(--rule) calc(12.5% - .5px), var(--rule) calc(12.5% + .5px), transparent calc(12.5% + .5px), transparent calc(87.5% - .5px), var(--rule) calc(87.5% - .5px), var(--rule) calc(87.5% + .5px), transparent calc(87.5% + .5px))}
+  .inuse{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .btn{display:inline-flex;align-items:center;gap:8px;font:600 15px/1 var(--font);padding:12px 16px 12px 14px;border-radius:8px;border:1px solid var(--rule);background:var(--field);color:var(--ink)}
+  .btn.primary{background:var(--blue);border-color:var(--blue);color:var(--on-blue)}
+  .btn svg{width:20px;height:20px}
+  .ib{display:inline-grid;place-items:center;width:44px;height:44px;border-radius:8px;border:1px solid var(--rule);color:var(--ink-2)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Round icons</h1>
+  <p class="lede">One line set: 24 px grid, 1.5 px stroke, round ends. Drawn in the text colour, so dark mode comes free. Use <code>Round.icon('copy')</code> from <code>assets/icons.js</code>, or the sprite <code>assets/icons.svg#i-copy</code>.</p>
+
+  <div class="bar" role="group" aria-label="Preview options">
+    <span>Size</span>
+    <button class="seg" data-size="16" aria-pressed="false">16</button>
+    <button class="seg" data-size="20" aria-pressed="false">20</button>
+    <button class="seg" data-size="24" aria-pressed="true">24</button>
+    <button class="seg" data-size="48" aria-pressed="false">48</button>
+    <span style="margin-left:16px">Grid</span>
+    <button class="seg" id="gridBtn" aria-pressed="false">Show</button>
+    <span style="margin-left:16px">Theme</span>
+    <button class="seg" id="themeBtn" aria-pressed="false">Dark</button>
+  </div>
+
+  <div id="sets"></div>
+
+  <section>
+    <h2>In use</h2>
+    <div class="inuse" id="inuse"></div>
+  </section>
+</main>
+<script src="../assets/icons.js"></script>
+<script>
+(function(){
+  var sets = document.getElementById('sets'), size = 24;
+  function draw(){
+    sets.innerHTML = Round.ICON_GROUPS.map(function(g){
+      return '<section><h2>' + g[0] + '</h2><ul>' + g[1].map(function(n){
+        return '<li>' + Round.icon(n, {size: size}) + '<code>' + n + '</code></li>';
+      }).join('') + '</ul></section>';
+    }).join('');
+  }
+  draw();
+  document.querySelectorAll('[data-size]').forEach(function(b){
+    b.addEventListener('click', function(){
+      size = +b.dataset.size; draw();
+      document.querySelectorAll('[data-size]').forEach(function(x){ x.setAttribute('aria-pressed', x === b); });
+    });
+  });
+  var gb = document.getElementById('gridBtn');
+  gb.addEventListener('click', function(){ var on = document.body.classList.toggle('grid-on'); gb.setAttribute('aria-pressed', on); });
+  var tb = document.getElementById('themeBtn');
+  tb.addEventListener('click', function(){
+    var dark = document.documentElement.dataset.theme !== 'dark';
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    tb.setAttribute('aria-pressed', dark);
+  });
+  if (document.documentElement.dataset.theme === 'dark') tb.setAttribute('aria-pressed', 'true');
+  document.getElementById('inuse').innerHTML =
+    '<span class="btn primary">' + Round.icon('check') + 'Save rating</span>' +
+    '<span class="btn">' + Round.icon('copy') + 'Copy for the group chat</span>' +
+    '<span class="btn">' + Round.icon('download') + 'Download PDF</span>' +
+    '<span class="ib">' + Round.icon('chevron-left', {label: 'Previous coffee'}) + '</span>' +
+    '<span class="ib">' + Round.icon('chevron-right', {label: 'Next coffee'}) + '</span>' +
+    '<span class="ib">' + Round.icon('share', {label: 'Share'}) + '</span>' +
+    '<span class="ib">' + Round.icon('more-vertical', {label: 'More'}) + '</span>';
+})();
+</script>
+</body>
+</html>

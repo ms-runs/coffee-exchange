@@ -15,9 +15,9 @@ Live: https://ms-runs.github.io/coffee-exchange/ (a standalone site; not embedde
 | [`about/`](about/) | Who we are and how a turn works; people come from `data/people.json` | First version |
 | [`index.html`](index.html) | The site: the record of every coffee by number, a page per coffee with ratings, and the globe beside it (they talk via `postMessage`) | Draft |
 | [`data/`](data/) | `coffees.json`, `cities.json`, `people.json`, `reviews.json` (empty until ratings open), one JSON file per round in `rounds/` | Started |
-| [`assets/`](assets/) | Shared brand files (`round.css`, `round.js`, Outfit fonts, icons), theme script, bag photos | Started |
+| [`assets/`](assets/) | Shared brand files (`round.css`, `round.js`, Outfit fonts, app icons), the line icon set (`icons.js`, sprite `icons.svg`, preview at [`docs/icons.html`](docs/icons.html)), theme script, bag photos | Started |
 | [`docs/`](docs/) | Project brief and card design spec | |
-| [`tools/`](tools/) | Build scripts (land dots for the globe) | |
+| [`tools/`](tools/) | Build scripts (land dots for the globe; `build-icons.mjs` rebuilds the icon sprite) | |
 
 ## Stack
 
