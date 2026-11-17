@@ -163,7 +163,7 @@ export function extract({ product, html, url }) {
 function readText(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   const fields = {}, notes = [];
-  const add = (k, v) => { v = tidy(v); if (!v || v.length > 160) return; (fields[k] = fields[k] || []).push(v); };
+  const add = (k, v) => { v = tidy(v); if (!v || v.length > 160 || shopJunk(v)) return; (fields[k] = fields[k] || []).push(v); };
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -311,7 +311,7 @@ function readLdProduct(html) {
 /* ---------- small helpers ---------- */
 export function htmlToText(html) {
   return decode(String(html || '')
-    .replace(/<(script|style|svg|noscript|template|head|iframe|select|button)\b[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<(script|style|svg|noscript|template|head|iframe|select|button|form|fieldset|variant-selects|variant-radios|variant-picker|product-form|nav)\b[\s\S]*?<\/\1>/gi, ' ')
     .replace(/<!--[\s\S]*?-->/g, ' ')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/?(p|div|li|ul|ol|h[1-6]|tr|td|th|dt|dd|summary|details|section|article|header|footer|table|span class="metafield[^"]*")\b[^>]*>/gi, '\n')
@@ -330,5 +330,7 @@ const cap = s => { s = tidy(s); return s ? s.charAt(0).toUpperCase() + s.slice(1
 const uniq = a => [...new Set(a)];
 const uniqCase = a => a.filter((x, i) => a.findIndex(y => y.toLowerCase() === x.toLowerCase()) === i);
 const joinAnd = a => a.length <= 1 ? (a[0] || '') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1].toLowerCase();
+// shop interface text that slips into page text (buttons, stock messages, words run together from hidden labels)
+const shopJunk = s => /sold out|unavailable|add to (?:cart|bag|basket)|select (?:a|an|your)|out of stock|subscribe|quantity/i.test(s) || /[a-z][A-Z][a-z]/.test(s);
 const isShout = s => s.length > 3 && s === s.toUpperCase() && /[A-Z]{3}/.test(s) && /\s/.test(s);
 function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
