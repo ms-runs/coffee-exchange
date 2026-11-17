@@ -152,6 +152,13 @@
   .sheet-list .who{color:var(--ink-2);font-size:13px}
   .sheet-empty{font-size:13px;color:var(--ink-2);padding:12px 0;border-top:1px solid var(--ink);margin:0}
   .actions{display:flex;flex-direction:column;gap:10px}
+  .btn.save{height:48px;font-size:16px}
+  .save-status a{color:var(--blue)}
+  #code-field[hidden]{display:none}
+  .code-msg{font-size:13px;min-height:18px}
+  .code-msg.ok{color:var(--ink-2)}
+  .code-msg.bad{color:var(--warn)}
+  .copy-json{align-self:flex-start;margin-left:-8px}
   .actions .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,12px);background:var(--ink);color:var(--bg);font-size:14px;padding:10px 16px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s ease-out,transform .2s ease-out}
   .toast.on{opacity:1;transform:translate(-50%,0)}
@@ -270,9 +277,11 @@
     </fieldset>
 
     <fieldset>
-      <legend>Save to the site</legend>
-      <p class="muted">Copies this coffee as an entry for <code>data/coffees.json</code>, so it shows on the globe and, later, the ratings page.</p>
-      <button type="button" class="btn" id="copy-json">Copy JSON</button>
+      <legend>Save to the site <small>Adds it to the record and the globe</small></legend>
+      <label class="f" id="code-field" hidden>Group code<input type="text" id="code" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="From the group chat"><span class="code-msg" id="code-msg"></span></label>
+      <button type="button" class="btn save" id="save-site">Save coffee</button>
+      <p class="lookup-status save-status" id="save-status" role="status" aria-live="polite"></p>
+      <button type="button" class="btn ghost copy-json" id="copy-json">Copy JSON instead</button>
     </fieldset>
   </form>
 </main>
@@ -576,7 +585,7 @@ function useImage(img){
     const k = Math.min(1, 600 / Math.max(img.naturalWidth, img.naturalHeight));
     const cv = document.createElement('canvas'); cv.width = Math.round(img.naturalWidth*k); cv.height = Math.round(img.naturalHeight*k);
     const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,cv.width,cv.height); x.drawImage(img, 0, 0, cv.width, cv.height);
-    card.bagImage = {src: cv.toDataURL('image/jpeg', 0.88), iw: cv.width, ih: cv.height};
+    card.bagImage = {src: cv.toDataURL('image/jpeg', 0.88), iw: cv.width, ih: cv.height}; card._photoNew = true;
     detected = detectColours(img);
     if (detected.length) card.colour = mostColourful(detected);
     renderSwatches(); render(); save();
@@ -671,7 +680,7 @@ function render(){
   const {svg, warnings} = renderSVG(card);
   $('paper').innerHTML = svg;
   const w = $('warn'); w.hidden = !warnings.length; w.textContent = warnings.join(' ');
-  syncContrast();
+  syncContrast(); syncSave();
 }
 let saveT;
 function save(){ clearTimeout(saveT); saveT = setTimeout(() => { if (!store.set('draft', {card, detected})) store.set('draft', {card:{...card, bagImage:null}, detected}); store.set('sheet', sheet.map(c => ({...c}))) || store.set('sheet', sheet.map(c => ({...c, bagImage:null}))); }, 300); }
@@ -683,7 +692,7 @@ function nextNumber(){ const n = Math.max(0, ...coffees.map(c => parseInt(c.numb
 function fromData(c){
   return { number:c.number||'', name:c.name||'', roaster:c.roaster||'', roasterCity:c.roasterCity||'', pickedBy:c.pickedBy||'',
     colour:(c.colour||'#1A3FA0').toUpperCase(), details: clone(c.details && c.details.length ? c.details : DEFAULT_ROWS.map(l=>[l,''])),
-    tastingNotes: clone(c.tastingNotes||[]), bagImage:null, link:c.link||'', _bagPath:c.bagImage||null,
+    tastingNotes: clone(c.tastingNotes||[]), bagImage:null, link:c.link||'', _bagPath:c.bagImage||null, _from:c.number||null, _photoNew:false,
     origins: clone(c.origins||[]), _originText: ((c.details||[]).find(r => /^origins?$/i.test(r[0]))||[,''])[1] };
 }
 async function attachRepoPhoto(path){
@@ -798,7 +807,7 @@ const drop = $('drop');
 ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', e => readPhoto(e.dataTransfer.files[0]));
-$('photo-remove').addEventListener('click', () => { card.bagImage = null; detected = []; syncPhoto(); renderSwatches(); changed(); });
+$('photo-remove').addEventListener('click', () => { card.bagImage = null; card._bagPath = null; card._photoNew = false; detected = []; syncPhoto(); renderSwatches(); changed(); });
 $('start').addEventListener('change', e => {
   const v = e.target.value;
   detected = [];
@@ -816,6 +825,85 @@ $('copy-json').addEventListener('click', async () => {
   catch(e){ const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); toast('Copied'); }
 });
 
+/* ---------- save to the site (Worker: POST /api/coffees, needs the group code) ---------- */
+function fillStart(withDraft){
+  const sel = $('start'), was = sel.value;
+  sel.innerHTML = (withDraft ? '<option value="draft">Your last card</option>' : '') +
+    coffees.map(c => `<option value="${esc(c.number)}">${esc(c.number)} ${esc(c.name)} · ${esc(c.roaster)}</option>`).join('') +
+    `<option value="new">New coffee (${nextNumber()})</option>`;
+  if ([...sel.options].some(o => o.value === was)) sel.value = was;
+}
+const num2 = n => String(n || '').trim().padStart(2, '0');
+// replacing is only automatic when you started from that coffee and kept its number
+const isUpdate = () => !!card._from && num2(card._from) === num2(card.number) && coffees.some(c => num2(c.number) === num2(card.number));
+function syncSave(){
+  const b = $('save-site'); if (!b || b.dataset.busy) return;
+  const n = (card.number || '').trim();
+  b.textContent = !n ? 'Save coffee' : isUpdate() ? `Save changes to coffee ${num2(n)}` : `Save coffee ${num2(n)}`;
+  b.disabled = !n || !(card.name || '').trim();
+}
+function saveStatus(html, bad){ const el = $('save-status'); el.classList.toggle('bad', !!bad); el.innerHTML = html; }
+const sharedCode = { get(){ try { return JSON.parse(localStorage.getItem('cx-rate:code')) || ''; } catch(e){ return ''; } },
+                     set(v){ try { localStorage.setItem('cx-rate:code', JSON.stringify(v)); } catch(e){} } };
+function codeMsg(t, kind){ const m = $('code-msg'); m.textContent = t || ''; m.className = 'code-msg' + (kind ? ' ' + kind : ''); }
+function setupCode(){
+  $('code-field').hidden = !!sharedCode.get();
+  let ct;
+  $('code').addEventListener('input', () => {
+    clearTimeout(ct); const v = $('code').value.trim(); if (!v || !API){ codeMsg(''); return; }
+    codeMsg('Checking…');
+    ct = setTimeout(async () => {
+      try {
+        const out = await (await fetch(API + '/api/code', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({code:v})})).json();
+        if ($('code').value.trim() !== v) return;
+        if (out.ok){ sharedCode.set(v); codeMsg('Code works. Saved on this device.', 'ok'); }
+        else codeMsg('That code isn\'t right.', 'bad');
+      } catch(e){ codeMsg(''); }
+    }, 400);
+  });
+}
+async function saveToSite(replace){
+  if (!API){ saveStatus('Saving isn\'t set up on this page. Use Copy JSON instead.', true); return; }
+  const btn = $('save-site'), entry = toEntry();
+  entry.number = num2(entry.number);
+  const hasPhoto = !!(card.bagImage && card.bagImage.src);
+  const body = { code: ($('code').value || sharedCode.get() || '').trim(), coffee: entry, replace: !!replace || isUpdate() };
+  if (hasPhoto && (card._photoNew || !card._bagPath)) body.photo = card.bagImage.src;
+  else if (hasPhoto) body.keepPhoto = card._bagPath;
+  btn.dataset.busy = '1'; btn.disabled = true; btn.textContent = 'Saving…';
+  saveStatus('<span class="spin" aria-hidden="true"></span>Saving to the site…');
+  try {
+    const res = await fetch(API + '/api/coffees', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+    const out = await res.json().catch(() => ({}));
+    if (res.status === 403 && out.code === 'group_code'){
+      sharedCode.set(''); $('code-field').hidden = false;
+      codeMsg(body.code ? 'That code isn\'t right.' : 'Add the group code to save.', 'bad');
+      saveStatus(''); $('code').focus(); return;
+    }
+    if (res.status === 409 && out.exists){
+      saveStatus(`Coffee ${esc(entry.number)} is already on the site${out.name ? ' as ' + esc(out.name) : ''}. <button type="button" class="btn ghost" id="save-replace">Replace it</button><button type="button" class="btn ghost" id="save-cancel">Cancel</button>`, true);
+      $('save-replace').addEventListener('click', () => saveToSite(true));
+      $('save-cancel').addEventListener('click', () => { saveStatus('Not saved. Change the number to save it as a new coffee.'); $('save-site').focus(); });
+      $('save-replace').focus(); return;
+    }
+    if (!res.ok || !out.ok){ saveStatus(esc(out.error || 'Could not save. Try again, or use Copy JSON.'), true); return; }
+    if (body.code) sharedCode.set(body.code);
+    $('code-field').hidden = true;
+    const saved = out.coffee, i = coffees.findIndex(c => num2(c.number) === saved.number);
+    if (i >= 0) coffees[i] = saved; else coffees.push(saved);
+    coffees.sort((a, b) => (parseInt(a.number, 10) || 0) - (parseInt(b.number, 10) || 0));
+    card.number = saved.number; card._from = saved.number; card._bagPath = saved.bagImage; card._photoNew = false;
+    document.querySelector('[data-k="number"]').value = saved.number;
+    fillStart([...$('start').options].some(o => o.value === 'draft')); $('start').value = saved.number; save();
+    saveStatus(`${out.replaced ? 'Updated' : 'Saved'}. Coffee ${esc(saved.number)} shows on the site in a minute or two. <a href="../#coffee-${esc(saved.number)}">Open its page</a> <a href="${esc(out.commit)}" target="_blank" rel="noopener">See the change</a>`);
+  } catch(e){
+    console.error(e); saveStatus('Could not reach the site. Check your connection and try again.', true);
+  } finally {
+    delete btn.dataset.busy; syncSave();
+  }
+}
+$('save-site').addEventListener('click', () => saveToSite(false));
+
 /* ---------- start ---------- */
 async function init(){
   await loadFonts();
@@ -823,12 +911,10 @@ async function init(){
   try { const r = await fetch('../data/coffees.json', {cache:'no-store'}); coffees = (await r.json()).coffees || []; }
   catch(e){ coffees = [FALLBACK]; }
   const sel = $('start');
-  sel.innerHTML = (draft ? '<option value="draft">Your last card</option>' : '') +
-    coffees.map(c => `<option value="${esc(c.number)}">${esc(c.number)} ${esc(c.name)} · ${esc(c.roaster)}</option>`).join('') +
-    `<option value="new">New coffee (${nextNumber()})</option>`;
+  fillStart(!!draft);
   if (draft && draft.card){ card = draft.card; detected = draft.detected || []; sel.value = 'draft'; }
   else { card = fromData(coffees[coffees.length-1]); sel.value = card.number; attachRepoPhoto(coffees[coffees.length-1].bagImage); }
-  fillForm(); render(); renderSheet();
+  fillForm(); render(); renderSheet(); setupCode();
   if (!hasPdf) toast('PDF tools did not load. Refresh to try again.');
 }
 if (window.cxTheme) cxTheme.onChange(() => renderSheet());

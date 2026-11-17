@@ -1,6 +1,6 @@
 # Cloudflare Worker
 
-Saves the group's reviews in Cloudflare D1 and serves them to the site. Free plan. Roaster lookup will be added here next.
+Saves the group's reviews in Cloudflare D1 and serves them to the site, looks up roaster links, and saves new coffees from the card maker into this repo. Free plan.
 
 | Route | What |
 | --- | --- |
@@ -8,6 +8,7 @@ Saves the group's reviews in Cloudflare D1 and serves them to the site. Free pla
 | `GET /api/reviews.csv` | One row per review, for Google Sheets: `=IMPORTDATA("https://<worker>/api/reviews.csv")` |
 | `POST /api/code` | `{ok}` for a group code, so the page can check it before saving |
 | `POST /api/reviews` | Save a review (needs the group code). One per person per coffee (name, case-insensitive); saving again replaces it |
+| `POST /api/coffees` | Save a coffee from the card maker (needs the group code). Commits `data/coffees.json` and the bag photo (`assets/bags/NN-name.jpg`) to `main` in one commit; Pages republishes in a minute or two. A number already on the site answers 409 unless `replace` is set. See `src/coffees.js` |
 | `GET /api/lookup?url=` | Draft card fields from a roaster's product link: `{ok, source, name, roaster, details:[[label,value]], tastingNotes, origins, image, images}`. Cached for an hour |
 | `GET /api/image?url=` | A product photo passed through (images only, up to 8 MB) so the card maker can read its colours |
 
@@ -15,6 +16,18 @@ Saves the group's reviews in Cloudflare D1 and serves them to the site. Free pla
 - Allowed sites (CORS): ms-runs.github.io and localhost. The site is standalone (not embedded on migsousa.com).
 - Group code: saving needs the group's code. Its SHA-256 (trimmed, lower-case) lives in the D1 `settings` table (`group_code_sha256`), so it can be changed from the D1 console without redeploying; see `migrations/0002_settings.sql`. No row = anyone can save. A `GROUP_CODE` secret, if set, takes priority. The review page asks for the code once per phone and checks it as you type (`POST /api/code`).
 - The pages find the Worker through `assets/config.js` (`window.CX_API`). Empty means the review page falls back to copy and paste.
+
+## Saving coffees: one-time setup
+
+The Worker writes to GitHub with a token, kept as a Worker secret (never in the repo):
+
+1. GitHub → Settings → Developer settings → Personal access tokens → **Fine-grained tokens** → Generate new token.
+   Repository access: **Only select repositories** → `ms-runs/coffee-exchange`. Permissions: **Contents: Read and write** (Metadata read-only is added for you). Pick the longest expiry and note the date.
+2. Cloudflare dashboard → Workers & Pages → `coffee-exchange` → Settings → Variables and Secrets → Add → Type **Secret**, name `GITHUB_TOKEN`, paste the token → Deploy.
+
+Until the secret is there, `POST /api/coffees` answers 503 and the card maker says to use Copy JSON. When the token expires, saving shows "The token on the Worker may have expired": make a new one and replace the secret.
+
+Commits show as made by the token's owner, with the message `Add coffee 03: <name>, picked by <name>`.
 
 ## Deploy
 
