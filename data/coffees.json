@@ -82,7 +82,7 @@
       "number": "03",
       "name": "Bread & Butter",
       "roaster": "Carter Coffee",
-      "roasterCity": null,
+      "roasterCity": "Edinburgh, Scotland",
       "pickedBy": "Miguel",
       "colour": "#B82D20",
       "origins": [
