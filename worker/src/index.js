@@ -3,10 +3,14 @@
 //   GET  /api/reviews            → { scale, reviews: [...] }   (optional ?number=01)
 //   GET  /api/reviews.csv        → CSV, one row per review     (for =IMPORTDATA in Google Sheets)
 //   POST /api/reviews            → save a review; one per person per coffee, saving again updates it
+//   GET  /api/lookup?url=…       → draft card fields from a roaster's product link (see lookup.js)
+//   GET  /api/image?url=…        → a product photo passed through, so the card maker can read its colours
 //
 // Group code: POST needs the group's code (body.code or X-Group-Code header). The code is checked against a
 // SHA-256 hash in the D1 settings table (key group_code_sha256), so it can be changed without redeploying;
 // a GROUP_CODE secret, if set, takes priority. Codes are compared trimmed and lower-case.
+
+import { lookup } from './lookup.js';
 
 const ALLOWED_ORIGINS = [
   'https://ms-runs.github.io',
@@ -64,6 +68,17 @@ export default {
         return json({ ok: true, review: saved.find(x => x.by.toLowerCase() === r.by.toLowerCase()) }, 200, cors);
       }
 
+      if (url.pathname === '/api/lookup' && request.method === 'GET') {
+        const target = url.searchParams.get('url') || '';
+        if (!/^https?:\/\//i.test(target)) return json({ ok: false, error: 'Paste the full link, starting with https://' }, 400, cors);
+        const result = await lookup(target);
+        return json(result, result.ok ? 200 : 422, { ...cors, 'Cache-Control': result.ok ? 'public, max-age=3600' : 'no-store' });
+      }
+
+      if (url.pathname === '/api/image' && request.method === 'GET') {
+        return await passImage(url.searchParams.get('url') || '', cors);
+      }
+
       // lets the review page check a code before someone fills in the whole form
       if (url.pathname === '/api/code' && request.method === 'POST') {
         let body = {}; try { body = await request.json(); } catch {}
@@ -71,17 +86,30 @@ export default {
       }
 
       if (url.pathname === '/' || url.pathname === '/api') {
-        return new Response('Coffee exchange API. GET /api/reviews, GET /api/reviews.csv, POST /api/reviews\n',
+        return new Response('Coffee exchange API. GET /api/reviews, GET /api/reviews.csv, POST /api/reviews, GET /api/lookup?url=, GET /api/image?url=\n',
           { headers: { ...cors, 'Content-Type': 'text/plain; charset=utf-8' } });
       }
 
       return json({ error: 'Not found' }, 404, cors);
     } catch (err) {
       console.error(err);
-      return json({ error: 'Something went wrong saving or reading reviews.' }, 500, cors);
+      return json({ error: url.pathname.startsWith('/api/lookup') ? 'The lookup failed. Try again, or fill the card in by hand.' : 'Something went wrong saving or reading reviews.' }, 500, cors);
     }
   },
 };
+
+// Product photos: images only, up to 8 MB, so the browser can read the bag's colours (needs CORS)
+async function passImage(target, cors) {
+  let u; try { u = new URL(target); } catch { return json({ error: 'Bad image link.' }, 400, cors); }
+  if (!/^https?:$/.test(u.protocol)) return json({ error: 'Bad image link.' }, 400, cors);
+  const r = await fetch(u.href, { headers: { 'Accept': 'image/avif,image/webp,image/png,image/jpeg,image/*' }, signal: AbortSignal.timeout(9000), cf: { cacheTtl: 86400 } });
+  const type = r.headers.get('Content-Type') || '';
+  if (!r.ok || !/^image\//i.test(type)) return json({ error: 'That link is not an image.' }, 415, cors);
+  if (Number(r.headers.get('Content-Length') || 0) > 8e6) return json({ error: 'That image is too big.' }, 413, cors);
+  const body = await r.arrayBuffer();
+  if (body.byteLength > 8e6) return json({ error: 'That image is too big.' }, 413, cors);
+  return new Response(body, { headers: { ...cors, 'Content-Type': type, 'Cache-Control': 'public, max-age=86400' } });
+}
 
 const norm = c => String(c || '').trim().toLowerCase();
 async function sha256(text) {
