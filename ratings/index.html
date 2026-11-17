@@ -126,8 +126,16 @@
 
   /* Profile sliders as 5-step rows */
   .profile{display:flex;flex-direction:column;border-top:1px solid var(--ink)}
-  .prow{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
-  .prow > span{font-size:15px;font-weight:600}
+  .prow{display:grid;grid-template-columns:118px 1fr;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+  .prow{position:relative}
+  .plab{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:15px;font-weight:600;min-height:32px;border-radius:6px}
+  .plab:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .plab .i{flex:none;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink-3);color:var(--ink-3);display:grid;place-items:center;font-size:11px;font-weight:600;line-height:1;font-style:normal;transition:border-color .15s ease-out,color .15s ease-out,background-color .15s ease-out}
+  .plab:hover .i,.plab[aria-expanded=true] .i{border-color:var(--blue);color:var(--blue)}
+  .plab[aria-expanded=true] .i{background:var(--blue);color:var(--on-blue,#fff)}
+  .ptip{grid-column:1 / -1;margin:2px 0 4px;padding:10px 12px;border-radius:8px;background:var(--wash);color:var(--ink);font-size:14px;line-height:1.45}
+  .ptip b{font-weight:600}
+  :root[data-theme=dark] .plab[aria-expanded=true] .i{background:#fff;border-color:#fff;color:var(--bg)}
   .steps{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
   .steps button{all:unset;box-sizing:border-box;cursor:pointer;height:32px;border-radius:6px;background:var(--wash);transition:background-color .15s ease-out}
   .steps button:hover{background:var(--line)}
@@ -228,7 +236,7 @@
 
     <section>
       <h2>How it felt</h2>
-      <p class="hint">Tap a step on each line, or skip any you're unsure of.</p>
+      <p class="hint">Tap a step on each line, or skip any you're unsure of. Tap a name to see what it means.</p>
       <div class="profile" id="profile"></div>
     </section>
 
@@ -305,6 +313,13 @@ const PROFILE = [
   ['bitterness','Bitterness','Low','High'],
   ['finish','Finish','Short','Long']
 ];
+const PROFILE_TIPS = {
+  acidity: 'The bright, tangy lift you feel at the sides of your tongue, like citrus or green apple. <b>Flat</b> is mellow and round; <b>bright</b> is lively and juicy.',
+  body: 'How heavy the coffee feels in your mouth. <b>Light</b> is like tea or skimmed milk; <b>heavy</b> is like whole milk or syrup.',
+  sweetness: 'Natural sweetness, with no sugar added: caramel, honey, ripe fruit. <b>Low</b> tastes dry; <b>high</b> tastes rich and rounded.',
+  bitterness: 'The dark chocolate or grapefruit-pith edge. A little is pleasant; a lot usually means a dark roast or a brew that ran too long.',
+  finish: 'How long the taste stays after you swallow. <b>Short</b> fades quickly; <b>long</b> lingers.'
+};
 const METHODS = ['Espresso','Milk drink','Pour-over','AeroPress','French press','Moka pot','Drip machine','Cold brew'];
 const AGAIN = [['yes','Yes'],['maybe','Maybe'],['no','No']];
 
@@ -426,9 +441,21 @@ function wireChip(b){
   });
 }
 function renderProfile(){
-  $('profile').innerHTML = PROFILE.map(([k,l,lo,hi]) => `<div class="prow"><span id="pl-${k}">${l}</span>
-    <div class="steps" role="radiogroup" aria-labelledby="pl-${k}">${[1,2,3,4,5].map(v => `<button type="button" role="radio" data-k="${k}" data-v="${v}" aria-checked="${r.profile[k] === v}" aria-label="${l} ${v} of 5, ${v===1?lo:v===5?hi:''}"></button>`).join('')}</div>
-    <div class="ends"><span>${lo}</span><span>${hi}</span></div></div>`).join('');
+  $('profile').innerHTML = PROFILE.map(([k,l,lo,hi]) => `<div class="prow"><button type="button" class="plab" id="pl-${k}" aria-expanded="false" aria-controls="pt-${k}">${l}<i class="i" aria-hidden="true">i</i></button>
+    <div class="steps" role="radiogroup" aria-label="${l}">${[1,2,3,4,5].map(v => `<button type="button" role="radio" data-k="${k}" data-v="${v}" aria-checked="${r.profile[k] === v}" aria-label="${l} ${v} of 5, ${v===1?lo:v===5?hi:''}"></button>`).join('')}</div>
+    <div class="ends"><span>${lo}</span><span>${hi}</span></div>
+    <p class="ptip" id="pt-${k}" hidden>${PROFILE_TIPS[k]}</p></div>`).join('');
+  // tap (or hover with a mouse) a line's name to see what it means; one open at a time
+  const tips = [...$('profile').querySelectorAll('.plab')];
+  const show = (b, open) => { b.setAttribute('aria-expanded', open); $(b.getAttribute('aria-controls')).hidden = !open; };
+  const only = b => tips.forEach(t => show(t, t === b));
+  const fine = matchMedia('(hover:hover) and (pointer:fine)');
+  tips.forEach(b => {
+    b.addEventListener('click', () => b.getAttribute('aria-expanded') === 'true' && !b.dataset.hov ? show(b, false) : (only(b), delete b.dataset.hov));
+    b.addEventListener('mouseenter', () => { if (fine.matches && b.getAttribute('aria-expanded') !== 'true'){ only(b); b.dataset.hov = 1; } });
+    b.closest('.prow').addEventListener('mouseleave', () => { if (fine.matches && b.dataset.hov){ show(b, false); delete b.dataset.hov; } });
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') tips.forEach(t => show(t, false)); });
   const paint = k => $('profile').querySelectorAll(`[data-k="${k}"]`).forEach(b => { const v = +b.dataset.v; b.classList.toggle('on', r.profile[k] >= v); b.setAttribute('aria-checked', r.profile[k] === v); });
   $('profile').querySelectorAll('.steps button').forEach(b => b.addEventListener('click', () => {
     const k = b.dataset.k, v = +b.dataset.v;

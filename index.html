@@ -88,10 +88,10 @@
   /* Steps */
 
   /* Coffee page */
-  .back{display:inline-flex;align-items:center;gap:6px;font-size:15px;margin:32px 0 24px}
+  .back{position:relative;z-index:1;display:inline-flex;align-items:center;gap:6px;font-size:15px;margin:32px 0 24px}
   .back svg{width:16px;height:16px}
   .c-head{display:grid;grid-template-columns:auto 1fr auto;gap:8px 28px;align-items:end;padding-bottom:28px}
-  .c-num{font-size:clamp(120px,15vw,184px);font-weight:600;letter-spacing:-0.05em;line-height:.78;grid-row:span 2;font-variant-numeric:proportional-nums}
+  .c-num{font-size:clamp(120px,15vw,184px);font-weight:600;letter-spacing:-0.05em;line-height:.78;grid-row:span 2;font-variant-numeric:proportional-nums;pointer-events:none}
   .c-cup{grid-column:3;grid-row:1 / span 2;align-self:start}
   .c-name{font-size:clamp(32px,4vw,48px);font-weight:600;letter-spacing:-0.03em;line-height:1;margin:0}
   .c-rs{font-size:17px;color:var(--ink-2);margin:0}
