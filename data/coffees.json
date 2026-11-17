@@ -48,7 +48,7 @@
       "roaster": "Little Wolf Coffee",
       "roasterCity": "Ipswich, MA",
       "pickedBy": "Miguel",
-      "colour": "#008CFF",
+      "colour": "#2E99EB",
       "origins": [
         "Colombia"
       ],
@@ -75,7 +75,7 @@
         "chocolate",
         "creamy"
       ],
-      "bagImage": null,
+      "bagImage": "assets/bags/02-companion.jpg",
       "link": "https://littlewolf.coffee/products/companion-blend-subscription"
     },
     {
