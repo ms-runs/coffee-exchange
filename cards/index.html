@@ -543,6 +543,11 @@ function detectColours(img){
     else clusters.push({rgb, lab, n:b.n});
   });
   clusters.sort((a,b) => b.n - a.n);
+  // a bag's print colour can be a tiny share of the photo (a small logo on a dark pouch), so always offer
+  // the most vivid colour that covers at least 0.2% of the bag, ahead of the big areas
+  const total = clusters.reduce((t, c) => t + c.n, 0), chroma = c => Math.hypot(c.lab[1], c.lab[2]);
+  const accent = clusters.filter(c => c.n / total >= 0.002 && chroma(c) >= 0.09).sort((a, b) => chroma(b) - chroma(a))[0];
+  if (accent) clusters.splice(clusters.indexOf(accent), 1), clusters.unshift(accent);
   const out = [];
   for (const cl of clusters){
     const hex = darkenTo3(rgb2hex(cl.rgb)), lab = toOklab(hex2rgb(hex));
