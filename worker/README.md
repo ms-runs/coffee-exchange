@@ -16,6 +16,8 @@ Saves the group's reviews in Cloudflare D1 and serves them to the site. Free pla
 
 ## Deploy
 
+Live at https://coffee-exchange.migsousa2.workers.dev (deployed 17 Nov 2026).
+
 Connected to GitHub through Cloudflare Workers Builds: Workers & Pages → Create → Import a repository → `ms-runs/coffee-exchange`, root directory `worker`. Every push to `main` that touches `worker/` redeploys.
 
 Local: `npx wrangler d1 migrations apply coffee-exchange --local` then `npx wrangler dev`.
