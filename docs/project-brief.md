@@ -17,7 +17,7 @@ A rotating coffee swap between friends in Cincinnati, London, New York and Barce
 | --- | --- |
 | Format | Cards dropped in the bag (not stickers), A6 (105 × 148 mm), four to an A4 sheet |
 | Layout | Swiss grid on white: big number top-left, name and roaster, a ruled details table, bag photo and tasting notes at the bottom |
-| Header text | "Coffee exchange" and "Picked by <name>"; no round number |
+| Header | The Round lockup (disc in the coffee's colour) and "Picked by <name>"; no round number |
 | Number | 01, 02… numbers each coffee; also how coffees appear on the ratings grid |
 | Number colour | Chosen, or one of the 3 most dominant bag colours, darkened to at least 3:1 contrast on white; near-identical shades merged |
 | Details rows | Origin, process, variety, altitude, roast, harvest by default; rename or drop per coffee |
