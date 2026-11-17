@@ -9,6 +9,10 @@
 // Body: { code, coffee: {number, name, roaster, roasterCity, pickedBy, colour, origins, details, tastingNotes, link},
 //         photo?: 'data:image/jpeg;base64,…', keepPhoto?: 'assets/bags/03-name.jpg', replace?: true }
 // A number already on the site answers 409 {exists, name} unless replace is true.
+//
+// Removing: POST /api/coffees/remove { code, number, withReviews? } takes the entry out of data/coffees.json and
+// deletes its bag photo (if no other coffee uses it) in one commit. If the coffee has ratings in D1 it answers
+// 409 {reviews, name} unless withReviews is true; then the ratings are deleted too, so a reused number starts clean.
 
 const REPO = 'ms-runs/coffee-exchange';
 const BRANCH = 'main';
@@ -67,6 +71,53 @@ export async function saveCoffee(env, body) {
   }
 }
 
+export async function removeCoffee(env, body) {
+  if (!env.GITHUB_TOKEN) throw new SaveError('Removing from the site is not set up yet.', 503, { code: 'not_set_up' });
+  const raw = String(body.number ?? '').trim();
+  if (!/^\d{1,3}$/.test(raw)) throw new SaveError('Which coffee should be removed?');
+  const number = raw.padStart(2, '0');
+
+  const { count } = await env.DB.prepare('SELECT COUNT(*) AS count FROM reviews WHERE number = ?1').bind(number).first();
+
+  for (let attempt = 0; ; attempt++) {
+    const gh = github(env.GITHUB_TOKEN);
+    const ref = await gh('GET', `/git/ref/heads/${BRANCH}`);
+    const head = await gh('GET', `/git/commits/${ref.object.sha}`);
+    const text = await gh('GET', `/contents/${DATA_PATH}?ref=${ref.object.sha}`, null, 'raw');
+    let data;
+    try { data = JSON.parse(text); } catch { throw new SaveError('data/coffees.json on GitHub is not valid JSON. Fix it there first.', 500); }
+    const list = Array.isArray(data.coffees) ? data.coffees : [];
+    const i = list.findIndex(c => String(c.number) === number);
+    if (i < 0) throw new SaveError(`Coffee ${number} is not on the site.`, 404, { code: 'not_found' });
+    const gone = list[i];
+    if (count > 0 && !body.withReviews) throw new SaveError(`Coffee ${number} has ${count} rating${count === 1 ? '' : 's'}.`, 409, { reviews: count, name: gone.name || '' });
+
+    list.splice(i, 1);
+    const tree = [{ path: DATA_PATH, mode: '100644', type: 'blob', content: JSON.stringify(data, null, 2) + '\n' }];
+    const photo = typeof gone.bagImage === 'string' && /^assets\/bags\/[\w.-]+$/.test(gone.bagImage) ? gone.bagImage : null;
+    if (photo && !list.some(c => c.bagImage === photo) && await gh('GET', `/contents/${photo}?ref=${ref.object.sha}`, null, null, true)) {
+      tree.push({ path: photo, mode: '100644', type: 'blob', sha: null });   // sha null deletes the file
+    }
+    const newTree = await gh('POST', '/git/trees', { base_tree: head.tree.sha, tree });
+    const commit = await gh('POST', '/git/commits', {
+      message: `Remove coffee ${number}: ${gone.name || ''}\n\nRemoved from the card maker${count && body.withReviews ? `, with its ${count} rating${count === 1 ? '' : 's'}` : ''}.`,
+      tree: newTree.sha, parents: [ref.object.sha],
+    });
+    try {
+      await gh('PATCH', `/git/refs/heads/${BRANCH}`, { sha: commit.sha, force: false });
+    } catch (err) {
+      if (err.status === 422 && attempt < 2) continue;
+      throw err;
+    }
+    let reviewsDeleted = 0;
+    if (count > 0 && body.withReviews) {
+      const r = await env.DB.prepare('DELETE FROM reviews WHERE number = ?1').bind(number).run();
+      reviewsDeleted = r.meta?.changes ?? count;
+    }
+    return { ok: true, number, name: gone.name || '', photoDeleted: tree.length > 1, reviewsDeleted, commit: `https://github.com/${REPO}/commit/${commit.sha}` };
+  }
+}
+
 export function validateCoffee(c) {
   const str = (v, max) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
   const list = (v, n, max) => (Array.isArray(v) ? v : []).map(x => str(x, max)).filter(Boolean).slice(0, n);
@@ -109,7 +160,7 @@ function ordered(o) {
 const slug = s => (s || 'coffee').toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-') || 'coffee';
 
 function github(token) {
-  return async (method, path, body, accept) => {
+  return async (method, path, body, accept, allow404) => {
     const res = await fetch(`https://api.github.com/repos/${REPO}${path}`, {
       method,
       headers: {
@@ -121,6 +172,7 @@ function github(token) {
       },
       body: body ? JSON.stringify(body) : undefined,
     });
+    if (res.status === 404 && allow404) return null;
     if (!res.ok) {
       const detail = await res.text().catch(() => '');
       console.error('GitHub', method, path, res.status, detail.slice(0, 300));

@@ -6,13 +6,14 @@
 //   GET  /api/lookup?url=…       → draft card fields from a roaster's product link (see lookup.js)
 //   GET  /api/image?url=…        → a product photo passed through, so the card maker can read its colours
 //   POST /api/coffees            → save a coffee from the card maker into the GitHub repo (see coffees.js)
+//   POST /api/coffees/remove     → take a coffee off the site (and, if asked, its ratings)
 //
 // Group code: POST needs the group's code (body.code or X-Group-Code header). The code is checked against a
 // SHA-256 hash in the D1 settings table (key group_code_sha256), so it can be changed without redeploying;
 // a GROUP_CODE secret, if set, takes priority. Codes are compared trimmed and lower-case.
 
 import { lookup } from './lookup.js';
-import { saveCoffee, SaveError } from './coffees.js';
+import { saveCoffee, removeCoffee, SaveError } from './coffees.js';
 
 const ALLOWED_ORIGINS = [
   'https://ms-runs.github.io',
@@ -70,6 +71,21 @@ export default {
         return json({ ok: true, review: saved.find(x => x.by.toLowerCase() === r.by.toLowerCase()) }, 200, cors);
       }
 
+      if (url.pathname === '/api/coffees/remove' && request.method === 'POST') {
+        let body;
+        try { body = await request.json(); } catch { return json({ error: 'Send the request as JSON.' }, 400, cors); }
+        const code = String(body.code || request.headers.get('X-Group-Code') || '');
+        if (!(await codeOk(env, code))) {
+          return json({ error: code ? 'That group code is not right.' : 'Enter the group code to remove a coffee.', code: 'group_code' }, 403, cors);
+        }
+        try {
+          return json(await removeCoffee(env, body), 200, cors);
+        } catch (err) {
+          if (err instanceof SaveError) return json({ error: err.message, ...err.extra }, err.status, cors);
+          throw err;
+        }
+      }
+
       if (url.pathname === '/api/coffees' && request.method === 'POST') {
         if (Number(request.headers.get('Content-Length') || 0) > 3e6) return json({ error: 'That is too big to save. Try a smaller bag photo.' }, 413, cors);
         let body;
@@ -104,14 +120,14 @@ export default {
       }
 
       if (url.pathname === '/' || url.pathname === '/api') {
-        return new Response('Coffee exchange API. GET /api/reviews, GET /api/reviews.csv, POST /api/reviews, POST /api/coffees, GET /api/lookup?url=, GET /api/image?url=\n',
+        return new Response('Coffee exchange API. GET /api/reviews, GET /api/reviews.csv, POST /api/reviews, POST /api/coffees, POST /api/coffees/remove, GET /api/lookup?url=, GET /api/image?url=\n',
           { headers: { ...cors, 'Content-Type': 'text/plain; charset=utf-8' } });
       }
 
       return json({ error: 'Not found' }, 404, cors);
     } catch (err) {
       console.error(err);
-      return json({ error: url.pathname.startsWith('/api/lookup') ? 'The lookup failed. Try again, or fill the card in by hand.' : url.pathname === '/api/coffees' ? 'Something went wrong saving the coffee. Try again, or use Copy JSON.' : 'Something went wrong saving or reading reviews.' }, 500, cors);
+      return json({ error: url.pathname.startsWith('/api/lookup') ? 'The lookup failed. Try again, or fill the card in by hand.' : url.pathname.startsWith('/api/coffees') ? 'Something went wrong changing the coffee list. Try again in a minute.' : 'Something went wrong saving or reading reviews.' }, 500, cors);
     }
   },
 };

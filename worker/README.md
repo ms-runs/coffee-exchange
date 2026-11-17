@@ -9,6 +9,7 @@ Saves the group's reviews in Cloudflare D1 and serves them to the site, looks up
 | `POST /api/code` | `{ok}` for a group code, so the page can check it before saving |
 | `POST /api/reviews` | Save a review (needs the group code). One per person per coffee (name, case-insensitive); saving again replaces it |
 | `POST /api/coffees` | Save a coffee from the card maker (needs the group code). Commits `data/coffees.json` and the bag photo (`assets/bags/NN-name.jpg`) to `main` in one commit; Pages republishes in a minute or two. A number already on the site answers 409 unless `replace` is set. See `src/coffees.js` |
+| `POST /api/coffees/remove` | Take a coffee off the site (needs the group code): removes its entry and bag photo (unless another coffee uses it) in one commit. If it has ratings, answers 409 with the count unless `withReviews` is set; then deletes those ratings from D1 too |
 | `GET /api/lookup?url=` | Draft card fields from a roaster's product link: `{ok, source, name, roaster, details:[[label,value]], tastingNotes, origins, image, images}`. Cached for an hour |
 | `GET /api/image?url=` | A product photo passed through (images only, up to 8 MB) so the card maker can read its colours |
 
