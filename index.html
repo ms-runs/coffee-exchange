@@ -282,7 +282,6 @@ function renderHome(){
   });
   tiles.unshift(`<div class="tile next" role="listitem" aria-label="Coffee ${nextNumber()}, next turn"><span class="top"><span class="n">${nextNumber()}</span>${window.Round ? Round.mark({size:64, empty:true}) : ''}</span><span class="nm">Next turn</span><span class="rs">Whoever's turn it is</span><span class="ft"><span>Make the card in the card maker</span></span></div>`);
   $('grid').innerHTML = tiles.join('');
-  $('grid').querySelectorAll('.tile[data-n]').forEach(t => t.addEventListener('mouseenter', () => globe({coffee:t.dataset.n})));
 }
 
 function renderCoffee(c){
