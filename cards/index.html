@@ -573,8 +573,13 @@ function useImage(img){
     const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,cv.width,cv.height); x.drawImage(img, 0, 0, cv.width, cv.height);
     card.bagImage = {src: cv.toDataURL('image/jpeg', 0.88), iw: cv.width, ih: cv.height};
     detected = detectColours(img);
-    if (detected.length) card.colour = detected[0];
+    if (detected.length) card.colour = mostColourful(detected);
     renderSwatches(); render(); save();
+}
+// the number should stand out, so start on the most colourful of the bag's colours (not the biggest area)
+function mostColourful(list){
+  const chroma = h => { const [, a, b] = toOklab(hex2rgb(h)); return Math.hypot(a, b); };
+  return list.reduce((best, h) => chroma(h) > chroma(best) + 0.02 ? h : best, list[0]);
 }
 
 /* ---------- form ---------- */
@@ -726,7 +731,8 @@ async function lookupLink(){
     next.name = d.name || ''; next.roaster = d.roaster || ''; next.roasterCity = d.roasterCity || '';
     const got = Object.fromEntries(d.details || []);
     const order = ['Origin', 'Blend', 'Process', 'Variety', 'Altitude', 'Roast', 'Harvest', 'Producer', 'Style'];
-    next.details = order.filter(l => got[l] || DEFAULT_ROWS.includes(l)).map(l => [l, got[l] || '']);
+    // only rows the shop gave us: empty rows print as dashes and push the details into the photo
+    next.details = order.filter(l => got[l]).map(l => [l, got[l]]);
     (d.details || []).forEach(([l, v]) => { if (!order.includes(l)) next.details.push([l, v]); });
     next.tastingNotes = d.tastingNotes || [];
     next.origins = d.origins || []; next._originText = got.Origin || '';
@@ -749,10 +755,12 @@ async function lookupLink(){
 
     const filled = (d.details || []).map(r => r[0].toLowerCase());
     if (d.tastingNotes && d.tastingNotes.length) filled.push('tasting notes');
-    if (photo) filled.push('photo and colours');
+    if (photo) filled.push('bag photo');
     const list = filled.length > 1 ? filled.slice(0, -1).join(', ') + ' and ' + filled[filled.length - 1] : (filled[0] || 'the name');
-    const empty = card.details.filter(r => !r[1]).map(r => r[0].toLowerCase());
-    lookupStatus(`<span>Filled ${esc(list)} from ${esc(d.roaster || new URL(link).hostname)}.${empty.length ? ' Fill in or remove ' + esc(empty.join(', ')) + '.' : ''} Check everything against the bag before printing.</span><button type="button" class="btn ghost" id="lookup-undo">Undo</button>`);
+    const missing = ['Origin', 'Process', 'Roast'].filter(l => !got[l]).map(l => l.toLowerCase());
+    if (!(d.tastingNotes || []).length) missing.push('tasting notes');
+    const miss = missing.length ? ` Not on the page: ${esc(missing.join(', '))}.` : '';
+    lookupStatus(`<span>Filled ${esc(list)} from ${esc(d.roaster || new URL(link).hostname)}.${miss} Check it against the bag before printing.</span><button type="button" class="btn ghost" id="lookup-undo">Undo</button>`);
     $('lookup-undo').addEventListener('click', undoLookup);
     document.querySelectorAll('#form input[data-k], #details textarea').forEach(el => { if (el.value){ el.classList.remove('filled'); void el.offsetWidth; el.classList.add('filled'); } });
   } catch(e){
